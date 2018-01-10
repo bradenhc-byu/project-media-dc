@@ -1,8 +1,9 @@
 package com.byu.pmedia.parser;
 
 import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.model.CodeStamp;
-import com.byu.pmedia.model.CodedVideoData;
+import com.byu.pmedia.model.StillFaceCode;
+import com.byu.pmedia.model.StillFaceCodeData;
+import com.byu.pmedia.model.StillFaceVideoData;
 
 import java.io.*;
 
@@ -14,7 +15,7 @@ public class CodedVideoCSVParser {
         this.delimeter = ",";
     }
 
-    public boolean parseFromCSVIntoCodedVideoData(String filename, CodedVideoData videoData){
+    public boolean parseFromCSVIntoCodedVideoData(String filename, StillFaceVideoData videoData){
 
         PMLogger.getInstance().debug("Parsing data from " + filename + " into CodedVideoDataObject");
 
@@ -23,7 +24,7 @@ public class CodedVideoCSVParser {
             BufferedReader br = new BufferedReader(new FileReader(filename));
 
 
-            // Clear any existing data from the CodedVideoData object. Placing this line after creating the
+            // Clear any existing data from the StillFaceVideoData object. Placing this line after creating the
             // buffered reader ensures that the provided CSV file exists
             videoData.clear();
 
@@ -36,9 +37,10 @@ public class CodedVideoCSVParser {
 
                 // Strip away the header contents from the CSV file (if it exists)
                 try{
-                    videoData.addCodeStamp(new CodeStamp(Integer.parseInt(data[0]),
+                    videoData.addCodeData(new StillFaceCodeData(Integer.parseInt(data[0]),
                             Integer.parseInt(data[1]),
-                            data[2]));
+                            new StillFaceCode(data[2]),
+                            data[3]));
                 }
                 catch(NumberFormatException e){
                     PMLogger.getInstance().debug("Detected possible CSV header, skipping...");
@@ -62,21 +64,21 @@ public class CodedVideoCSVParser {
         return true;
     }
 
-    public boolean serializeToCSVFromCodedVideoData(CodedVideoData videoData, String filename){
+    public boolean serializeToCSVFromCodedVideoData(StillFaceVideoData videoData, String filename){
 
-        PMLogger.getInstance().debug("Serialize CodedVideoData to CSV file: " + filename);
+        PMLogger.getInstance().debug("Serialize StillFaceVideoData to CSV file: " + filename);
 
         try{
 
             BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
 
-            for(CodeStamp stamp : videoData.getData()){
+            for(StillFaceCodeData stamp : videoData.getData()){
                 StringBuilder sb = new StringBuilder();
                 sb.append(stamp.getTime());
                 sb.append(this.delimeter);
                 sb.append(stamp.getDuration());
                 sb.append(this.delimeter);
-                sb.append(stamp.getType().getName());
+                sb.append(stamp.getCode().getName());
                 sb.append(this.delimeter);
                 sb.append(stamp.getComment());
                 sb.append("\n");

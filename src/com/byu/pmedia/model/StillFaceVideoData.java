@@ -2,20 +2,20 @@ package com.byu.pmedia.model;
 
 import java.util.ArrayList;
 
-public class CodedVideoData {
+public class StillFaceVideoData {
 
-    ArrayList<CodeStamp> data = new ArrayList<>();
+    ArrayList<StillFaceCodeData> data = new ArrayList<>();
     private String delimiter;
 
-    public CodedVideoData(){
+    public StillFaceVideoData(){
         this.delimiter = ",";
     }
 
-    public void addCodeStamp(CodeStamp cs){
+    public void addCodeData(StillFaceCodeData cs){
         this.data.add(cs);
     }
 
-    public ArrayList<CodeStamp> getData(){
+    public ArrayList<StillFaceCodeData> getData(){
         return this.data;
     }
 
@@ -26,12 +26,12 @@ public class CodedVideoData {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for(CodeStamp stamp : this.data){
+        for(StillFaceCodeData stamp : this.data){
             sb.append(stamp.getTime());
             sb.append(this.delimiter);
             sb.append(stamp.getDuration());
             sb.append(this.delimiter);
-            sb.append(stamp.getType().getName());
+            sb.append(stamp.getCode().getName());
             sb.append(this.delimiter);
             sb.append(stamp.getComment());
             sb.append("\n");

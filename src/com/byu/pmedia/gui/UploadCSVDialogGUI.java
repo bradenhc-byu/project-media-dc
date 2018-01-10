@@ -1,7 +1,6 @@
 package com.byu.pmedia.gui;
 
-import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.model.CodedVideoData;
+import com.byu.pmedia.model.StillFaceVideoData;
 import com.byu.pmedia.parser.CodedVideoCSVParser;
 
 import javax.swing.*;
@@ -110,7 +109,7 @@ public class UploadCSVDialogGUI extends JDialog {
         if(filename == null){
             return;
         }
-        CodedVideoData videoData = new CodedVideoData();
+        StillFaceVideoData videoData = new StillFaceVideoData();
         boolean success = new CodedVideoCSVParser().parseFromCSVIntoCodedVideoData(filename, videoData);
         if(success){
             //this.dataDispalyTextArea.setText(videoData.toString());

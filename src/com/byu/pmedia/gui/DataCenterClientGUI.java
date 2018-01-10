@@ -1,12 +1,8 @@
 package com.byu.pmedia.gui;
 
-import com.byu.pmedia.model.CodedVideoData;
-import com.byu.pmedia.parser.CodedVideoCSVParser;
-
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 
 public class DataCenterClientGUI {
 
@@ -35,20 +31,8 @@ public class DataCenterClientGUI {
         });
     }
 
-    private static void displayGUI(){
-        JFrame frame = new JFrame("ProjectMEDIA Data Center");
-        frame.setContentPane(new DataCenterClientGUI().panelMain);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+    public JPanel getMainPanel() {
+        return panelMain;
     }
 
-    public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable(){
-            public void run(){
-                displayGUI();
-            }
-        });
-    }
 }
