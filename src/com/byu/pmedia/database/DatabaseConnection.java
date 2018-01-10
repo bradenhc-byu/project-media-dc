@@ -29,7 +29,7 @@ public class DatabaseConnection {
         this.connectionEstablished = false;
     }
 
-    public void establish(){
+    public boolean establish(){
         this.connectionEstablished = false;
         try{
             this.connection = DriverManager.getConnection(this.url);
@@ -42,10 +42,11 @@ public class DatabaseConnection {
         catch(SQLException e){
             PMLogger.getInstance().error("Failed to establish database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
-            return;
+            return false;
         }
         this.connectionEstablished = true;
 
+        return true;
     }
 
     public boolean close(){

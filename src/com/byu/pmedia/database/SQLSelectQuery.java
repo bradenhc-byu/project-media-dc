@@ -2,7 +2,6 @@ package com.byu.pmedia.database;
 
 import com.byu.pmedia.log.PMLogger;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -41,7 +40,12 @@ public class SQLSelectQuery implements ISQLDatabaseQuery {
     }
 
     @Override
-    public ResultSet execute(Connection connection) {
+    public ResultSet execute(DatabaseConnection connection) {
+
+        if(!connection.isConnectionEstablished()){
+            PMLogger.getInstance().warn("Cannot execute query. Database Connection has not been established");
+            return null;
+        }
 
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("SELECT ");
@@ -64,7 +68,7 @@ public class SQLSelectQuery implements ISQLDatabaseQuery {
         }
 
         try{
-            Statement statement = connection.createStatement();
+            Statement statement = connection.getConnection().createStatement();
             return statement.executeQuery(queryBuilder.toString());
         }
         catch(SQLException e){

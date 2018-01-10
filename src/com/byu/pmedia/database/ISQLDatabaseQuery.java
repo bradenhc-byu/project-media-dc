@@ -10,5 +10,5 @@ public interface ISQLDatabaseQuery {
      *
      * @return True if the query executes successfully, false otherwise
      */
-    ResultSet execute(Connection connection);
+    ResultSet execute(DatabaseConnection connection);
 }

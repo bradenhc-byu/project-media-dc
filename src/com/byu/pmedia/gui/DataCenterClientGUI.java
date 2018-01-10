@@ -18,35 +18,21 @@ public class DataCenterClientGUI {
     private JLabel welcomeLabel;
     private JScrollPane dataDisplayScrollPane;
 
+    private UploadCSVDialogGUI uploadDialog;
+
     public DataCenterClientGUI() {
+
+        this.uploadDialog = new UploadCSVDialogGUI(this);
 
         importDataButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                String filename = chooseFile();
-                if(filename != null){
-                    importFile(filename);
-                }
+                uploadDialog.pack();
+                uploadDialog.setLocationRelativeTo(null);
+                uploadDialog.setTitle("Upload CSV File");
+                uploadDialog.setVisible(true);
             }
         });
-    }
-
-    private String chooseFile(){
-        JFileChooser fc = new JFileChooser();
-        int returnval = fc.showOpenDialog(null);
-        if(returnval == JFileChooser.APPROVE_OPTION){
-            File selectedFile = fc.getSelectedFile();
-            return selectedFile.getAbsolutePath();
-        }
-        return null;
-    }
-
-    private void importFile(String filename){
-        CodedVideoData videoData = new CodedVideoData();
-        boolean success = new CodedVideoCSVParser().parseFromCSVIntoCodedVideoData(filename, videoData);
-        if(success){
-            this.dataDispalyTextArea.setText(videoData.toString());
-        }
     }
 
     private static void displayGUI(){
@@ -54,6 +40,7 @@ public class DataCenterClientGUI {
         frame.setContentPane(new DataCenterClientGUI().panelMain);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
