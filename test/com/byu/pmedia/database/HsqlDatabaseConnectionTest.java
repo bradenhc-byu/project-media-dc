@@ -26,5 +26,10 @@ public class HsqlDatabaseConnectionTest {
 
     @Test
     public void close() {
+        HsqlDatabaseConnection databaseConnection = new HsqlDatabaseConnection(filepath, dbname);
+        boolean result = databaseConnection.establish();
+        assertTrue(result);
+        result = databaseConnection.close();
+        assertTrue(result);
     }
 }

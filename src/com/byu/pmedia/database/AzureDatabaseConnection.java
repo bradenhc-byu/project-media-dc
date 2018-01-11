@@ -29,7 +29,7 @@ public class AzureDatabaseConnection implements IDatabaseConnection{
         this.connectionEstablished = false;
     }
 
-    public boolean establish(){
+    public boolean establish() throws SQLException {
         this.connectionEstablished = false;
         try{
             this.connection = DriverManager.getConnection(this.url);
@@ -42,14 +42,14 @@ public class AzureDatabaseConnection implements IDatabaseConnection{
         catch(SQLException e){
             PMLogger.getInstance().error("Failed to establish database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
-            return false;
+            throw e;
         }
         this.connectionEstablished = true;
 
         return true;
     }
 
-    public boolean close(){
+    public boolean close() throws SQLException {
         PMLogger.getInstance().info("Closing database connection");
         try{
             this.connection.close();
@@ -57,7 +57,7 @@ public class AzureDatabaseConnection implements IDatabaseConnection{
         catch(SQLException e){
             PMLogger.getInstance().error("Failed to close database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
-            return false;
+            throw e;
         }
         PMLogger.getInstance().info("Database connection closed successfully");
         this.connectionEstablished = false;
@@ -88,11 +88,13 @@ public class AzureDatabaseConnection implements IDatabaseConnection{
         return url;
     }
 
+    @Override
     public Connection getConnection() {
         return connection;
     }
 
-    public boolean isConnectionEstablished() {
+    @Override
+    public boolean connectionIsEstablished() {
         return connectionEstablished;
     }
 }

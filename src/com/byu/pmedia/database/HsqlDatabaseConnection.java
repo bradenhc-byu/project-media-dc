@@ -31,7 +31,7 @@ public class HsqlDatabaseConnection implements IDatabaseConnection {
     }
 
     @Override
-    public boolean establish() {
+    public boolean establish() throws SQLException {
         this.connectionEstablished = false;
         try{
             this.connection = DriverManager.getConnection(this.url);
@@ -44,7 +44,7 @@ public class HsqlDatabaseConnection implements IDatabaseConnection {
         catch(SQLException e){
             PMLogger.getInstance().error("Failed to establish database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
-            return false;
+            throw e;
         }
         this.connectionEstablished = true;
 
@@ -52,7 +52,7 @@ public class HsqlDatabaseConnection implements IDatabaseConnection {
     }
 
     @Override
-    public boolean close() {
+    public boolean close() throws SQLException {
         PMLogger.getInstance().info("Closing database connection");
         try{
             this.connection.close();
@@ -60,7 +60,7 @@ public class HsqlDatabaseConnection implements IDatabaseConnection {
         catch(SQLException e){
             PMLogger.getInstance().error("Failed to close database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
-            return false;
+            throw e;
         }
         PMLogger.getInstance().info("Database connection closed successfully");
         this.connectionEstablished = false;
@@ -87,10 +87,12 @@ public class HsqlDatabaseConnection implements IDatabaseConnection {
         return url;
     }
 
-    public boolean isConnectionEstablished() {
+    @Override
+    public boolean connectionIsEstablished() {
         return connectionEstablished;
     }
 
+    @Override
     public Connection getConnection() {
         return connection;
     }

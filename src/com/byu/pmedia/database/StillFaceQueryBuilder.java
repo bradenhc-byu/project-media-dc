@@ -36,23 +36,51 @@ public class StillFaceQueryBuilder {
         else{
             importIDCondition = "iid = " + importID;
         }
-        return "SELECT * " +
-                "FROM sf_data " +
+        return "SELECT d.*, c.name " +
+                "FROM sf_data d " +
+                "INNER JOIN sf_codes c ON d.cid = c.cid " +
                 "WHERE " + importIDCondition;
     }
 
     public String buildSelectCodeDataFromFamilyID(int familyID){
-        String importIDCondition;
+        String familyIDCondition;
         if(familyID == 0){
-            importIDCondition = "i.fid <> 0";
+            familyIDCondition = "i.fid <> 0";
         }
         else{
-            importIDCondition = "i.fid = " + familyID;
+            familyIDCondition = "i.fid = " + familyID;
         }
-        return "SELECT d.* " +
+        return "SELECT d.*, c.name " +
                 "FROM sf_data d " +
                 "INNER JOIN sf_imports i ON i.iid = d.iid " +
-                "WHERE " + importIDCondition;
+                "INNER JOIN sf_codes c ON d.cid = c.cid " +
+                "WHERE " + familyIDCondition;
+    }
+
+    public String buildSelectCode(int codeID){
+        String codeIDCondition;
+        if(codeID == 0){
+            codeIDCondition = "cid <> 0";
+        }
+        else{
+            codeIDCondition = "cid = " + codeID;
+        }
+        return "SELECT * " +
+                "FROM sf_codes " +
+                "WHERE " + codeIDCondition;
+    }
+
+    public String buildSelectTag(int tagID){
+        String tagIDCondition;
+        if(tagID == 0){
+            tagIDCondition = "tid <> 0";
+        }
+        else{
+            tagIDCondition = "tid = " + tagID;
+        }
+        return "SELECT * " +
+                "FROM sf_tags " +
+                "WHERE " + tagIDCondition;
     }
 
     //
