@@ -1,14 +1,14 @@
 package com.byu.pmedia.database;
 
 import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.util.ErrorCode;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
-public class DatabaseConnection {
+public class HsqlDatabaseConnection implements IDatabaseConnection {
 
-    private String hostname;
-    private String port;
+    private String filepath;
     private String dbname;
     private String user;
     private String password;
@@ -16,20 +16,22 @@ public class DatabaseConnection {
     private Connection connection;
     private boolean connectionEstablished;
 
+    public HsqlDatabaseConnection(String filepath, String dbname){
+        this.filepath = filepath;
+        this.dbname = dbname;
+        this.url = String.format("jdbc:hsqldb:file:%s/%s", filepath, dbname);
+    }
 
-    public DatabaseConnection(String hostname, String port, String dbname, String user, String password){
-        this.hostname = hostname;
-        this.port = port; //1433 for Azure
+    public HsqlDatabaseConnection(String filepath, String dbname, String user, String password) {
+        this.filepath = filepath;
         this.dbname = dbname;
         this.user = user;
         this.password = password;
-        this.url = String.format("jdbc:sqlserver://%s:%s;database=%s;user=%s;password=%s;" +
-                        "encrypt=true;hostNameInCertificate=*.database.windows.net;loginTimeout=30;",
-                this.hostname, this.port, this.dbname, this.user, this.password);
-        this.connectionEstablished = false;
+        this.url = String.format("jdbc:hsqldb:file:%s/%s;user=%s;password=%s", filepath, dbname, user, password);
     }
 
-    public boolean establish(){
+    @Override
+    public boolean establish() {
         this.connectionEstablished = false;
         try{
             this.connection = DriverManager.getConnection(this.url);
@@ -49,7 +51,8 @@ public class DatabaseConnection {
         return true;
     }
 
-    public boolean close(){
+    @Override
+    public boolean close() {
         PMLogger.getInstance().info("Closing database connection");
         try{
             this.connection.close();
@@ -64,12 +67,8 @@ public class DatabaseConnection {
         return true;
     }
 
-    public String getHostname() {
-        return hostname;
-    }
-
-    public String getPort() {
-        return port;
+    public String getFilepath() {
+        return filepath;
     }
 
     public String getDbname() {
@@ -88,11 +87,11 @@ public class DatabaseConnection {
         return url;
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
-
     public boolean isConnectionEstablished() {
         return connectionEstablished;
+    }
+
+    public Connection getConnection() {
+        return connection;
     }
 }

@@ -21,7 +21,7 @@ public class DatabaseConnectionTest {
     @Test
     public void establish() {
 
-        boolean result = new DatabaseConnection(this.host, this.port, this.dbname, this.user, this.password).establish();
+        boolean result = new AzureDatabaseConnection(this.host, this.port, this.dbname, this.user, this.password).establish();
         assertTrue(result);
 
     }
@@ -29,7 +29,7 @@ public class DatabaseConnectionTest {
     @Test
     public void close() {
 
-        DatabaseConnection dbc = new DatabaseConnection(this.host, this.port, this.dbname, this.user, this.password);
+        AzureDatabaseConnection dbc = new AzureDatabaseConnection(this.host, this.port, this.dbname, this.user, this.password);
         dbc.establish();
         boolean result = dbc.close();
         assertTrue(result);

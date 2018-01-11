@@ -2,9 +2,9 @@ package com.byu.pmedia.database;
 
 public class StillFaceDAO {
 
-    private DatabaseConnection databaseConnection;
+    private AzureDatabaseConnection databaseConnection;
 
-    public StillFaceDAO(DatabaseConnection databaseConnection){
+    public StillFaceDAO(AzureDatabaseConnection databaseConnection){
         this.databaseConnection = databaseConnection;
     }
 

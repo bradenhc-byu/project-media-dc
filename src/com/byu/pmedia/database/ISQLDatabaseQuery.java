@@ -1,6 +1,5 @@
 package com.byu.pmedia.database;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 
 public interface ISQLDatabaseQuery {
@@ -10,5 +9,5 @@ public interface ISQLDatabaseQuery {
      *
      * @return True if the query executes successfully, false otherwise
      */
-    ResultSet execute(DatabaseConnection connection);
+    ResultSet execute(AzureDatabaseConnection connection);
 }
