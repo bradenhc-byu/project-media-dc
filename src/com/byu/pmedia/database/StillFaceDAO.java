@@ -20,6 +20,10 @@ public class StillFaceDAO {
         this.databaseConnection = databaseConnection;
     }
 
+    public boolean initializeDatabase(DatabaseMode mode){
+        return false;
+    }
+
 
     /**
      * Insert new import data into the database
@@ -48,7 +52,7 @@ public class StillFaceDAO {
             return generatedKey;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to insert import data: " + e.getMessage());
+            PMLogger.getInstance().error("Unable to insert import data: " + e.getMessage() + "\n" + query);
             return -1;
         }
     }
@@ -492,6 +496,34 @@ public class StillFaceDAO {
             PMLogger.getInstance().error("Unable to delete tag: " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean createTables(DatabaseMode mode){
+        // Initialize all the queries
+        String createImportTableQuery = this.queryBuilder.buildCreateSFImportTable(mode);
+        String createDataTableQuery = this.queryBuilder.buildCreateSFDataTable(mode);
+        String createCodeTableQuery = this.queryBuilder.buildCreateSFCodesTable(mode);
+        String createTagTableQuery = this.queryBuilder.buildCreateSFTagsTable(mode);
+
+        // Execute the queries
+        try{
+            this.openConnection();
+            Statement statement = this.databaseConnection.getConnection().createStatement();
+            statement.executeQuery(createImportTableQuery);
+            statement.executeQuery(createDataTableQuery);
+            statement.executeQuery(createCodeTableQuery);
+            statement.executeQuery(createTagTableQuery);
+            this.closeConnection();
+            return true;
+        }
+        catch(SQLException e){
+            PMLogger.getInstance().error("Unable to create database table: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean dropTables(){
+        return false;
     }
 
 

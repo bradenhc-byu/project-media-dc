@@ -3,6 +3,8 @@ package com.byu.pmedia.database;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.SQLException;
+
 import static org.junit.Assert.*;
 
 public class HsqlDatabaseConnectionTest {
@@ -19,17 +21,29 @@ public class HsqlDatabaseConnectionTest {
     @Test
     public void establish() {
 
-        boolean result = new HsqlDatabaseConnection(filepath, dbname).establish();
-        assertTrue(result);
+        try {
+            boolean result = new HsqlDatabaseConnection(filepath, dbname).establish();
+            assertTrue(result);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+            assertTrue(false);
+        }
 
     }
 
     @Test
     public void close() {
-        HsqlDatabaseConnection databaseConnection = new HsqlDatabaseConnection(filepath, dbname);
-        boolean result = databaseConnection.establish();
-        assertTrue(result);
-        result = databaseConnection.close();
-        assertTrue(result);
+        try {
+            HsqlDatabaseConnection databaseConnection = new HsqlDatabaseConnection(filepath, dbname);
+            boolean result = databaseConnection.establish();
+            assertTrue(result);
+            result = databaseConnection.close();
+            assertTrue(result);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+            assertTrue(false);
+        }
     }
 }

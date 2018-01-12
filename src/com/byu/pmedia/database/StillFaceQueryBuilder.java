@@ -163,4 +163,69 @@ public class StillFaceQueryBuilder {
     public String buildDeleteTag(StillFaceTag tag){
         return "DELETE FROM sf_tags WHERE tid = " + tag.getTagID();
     }
+
+    //
+    // CREATE TABLE statements
+    //
+
+    public String buildCreateSFImportTable(DatabaseMode mode){
+        String autoIncrement = getAutoIncrementSyntax(mode);
+        return "CREATE TABLE sf_imports\n" +
+                "(\n" +
+                "    iid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
+                "    filename VARCHAR(200) NOT NULL,\n" +
+                "    year INT NOT NULL,\n" +
+                "    fid INT NOT NULL,\n" +
+                "    pid INT NOT NULL,\n" +
+                "    alias VARCHAR(200),\n" +
+                "    date DATE NOT NULL\n" +
+                ")";
+    }
+
+    public String buildCreateSFDataTable(DatabaseMode mode){
+        String autoIncrement = getAutoIncrementSyntax(mode);
+        return "CREATE TABLE sf_data\n" +
+                "(\n" +
+                "    did INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
+                "    iid INT NOT NULL,\n" +
+                "    time INT NOT NULL,\n" +
+                "    duration INT NOT NULL,\n" +
+                "    pid INT NOT NULL,\n" +
+                "    cid INT NOT NULL,\n" +
+                "    comment VARCHAR(500)\n" +
+                ")";
+    }
+
+    public String buildCreateSFCodesTable(DatabaseMode mode){
+        String autoIncrement = getAutoIncrementSyntax(mode);
+        return "CREATE TABLE sf_codes\n" +
+                "(\n" +
+                "    cid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
+                "    name VARCHAR(200) NOT NULL\n"+
+                ")";
+    }
+
+    public String buildCreateSFTagsTable(DatabaseMode mode){
+        String autoIncrement = getAutoIncrementSyntax(mode);
+        return "CREATE TABLE sf_tags\n" +
+                "(\n" +
+                "    tid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
+                "    value VARCHAR(200) NOT NULL\n"+
+                ")";
+    }
+
+    public String getAutoIncrementSyntax(DatabaseMode mode){
+        switch (mode){
+            case AZURE:
+                return "IDENTITY(1,1)";
+
+            case DERBY:
+                return "GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)";
+
+            case HSQLDB:
+                return "IDENTITY";
+
+            default: return "AUTO INCREMENT";
+        }
+    }
 }

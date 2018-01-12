@@ -3,6 +3,8 @@ package com.byu.pmedia.database;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.SQLException;
+
 import static org.junit.Assert.*;
 
 public class DatabaseConnectionTest {
@@ -21,18 +23,30 @@ public class DatabaseConnectionTest {
     @Test
     public void establish() {
 
-        boolean result = new AzureDatabaseConnection(this.host, this.port, this.dbname, this.user, this.password).establish();
-        assertTrue(result);
+        try {
+            boolean result = new AzureDatabaseConnection(this.host, this.port, this.dbname, this.user, this.password).establish();
+            assertTrue(result);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+            assertTrue(false);
+        }
 
     }
 
     @Test
     public void close() {
 
-        AzureDatabaseConnection dbc = new AzureDatabaseConnection(this.host, this.port, this.dbname, this.user, this.password);
-        dbc.establish();
-        boolean result = dbc.close();
-        assertTrue(result);
+        try {
+            AzureDatabaseConnection dbc = new AzureDatabaseConnection(this.host, this.port, this.dbname, this.user, this.password);
+            dbc.establish();
+            boolean result = dbc.close();
+            assertTrue(result);
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+            assertTrue(false);
+        }
 
     }
 }

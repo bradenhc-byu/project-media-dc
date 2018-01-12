@@ -112,7 +112,7 @@ public class UploadCSVDialogGUI extends JDialog {
         StillFaceVideoData videoData = new StillFaceVideoData();
         boolean success = new CodedVideoCSVParser().parseFromCSVIntoCodedVideoData(filename, videoData);
         if(success){
-            //this.dataDispalyTextArea.setText(videoData.toString());
+            //this.dataDispalyTextArea.setText(videoData.toPrettyString());
         }
     }
 
