@@ -31,7 +31,7 @@ public class StillFaceConfig {
                 if(line.startsWith("#")) continue;
                 int index = line.indexOf(":");
                 String key = line.substring(0, index).trim();
-                String value = line.substring(index).trim();
+                String value = line.substring(index+1).trim();
                 this.configuration.put(key, value);
             }
             return true;
@@ -58,12 +58,28 @@ public class StillFaceConfig {
         return this.configuration.get(key);
     }
 
-    public void setWithEnum(String key, IConfigEnum e){
-        this.configuration.put(key, e.toString());
+    public void setWithBoolean(String key, boolean value){
+        String sValue = (value) ? "true" : "false";
+        this.configuration.put(key, sValue);
     }
 
-    public IConfigEnum getAsEnum(String key){
-        return ConfigEnumManager.getInstance().lookup(this.configuration.get(key));
+    public boolean getAsBoolean(String key){
+        String value = this.configuration.get(key);
+        try {
+            return value.equals("true") || Integer.parseInt(value) > 0;
+        }
+        catch(NumberFormatException e){
+            PMLogger.getInstance().warn("Config request format error: " + e.getMessage());
+            return false;
+        }
     }
+
+    //public void setWithEnum(String key, IConfigEnum e){
+    //    this.configuration.put(key, e.toString());
+    //}
+
+    //public IConfigEnum getAsEnum(String key){
+    //    return ConfigEnumManager.getInstance().lookup(this.configuration.get(key));
+    //}
 
 }

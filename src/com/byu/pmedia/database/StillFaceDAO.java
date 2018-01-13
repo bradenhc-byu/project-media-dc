@@ -20,10 +20,6 @@ public class StillFaceDAO {
         this.databaseConnection = databaseConnection;
     }
 
-    public boolean initializeDatabase(DatabaseMode mode){
-        return false;
-    }
-
 
     /**
      * Insert new import data into the database
@@ -42,13 +38,12 @@ public class StillFaceDAO {
             PreparedStatement statement = this.databaseConnection.getConnection()
                     .prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.execute();
-            this.closeConnection();
             ResultSet resultSet = statement.getGeneratedKeys();
             int generatedKey = -1;
             if(resultSet.next()){
                 generatedKey = resultSet.getInt(1);
             }
-
+            this.closeConnection();
             return generatedKey;
         }
         catch(SQLException e){
@@ -77,19 +72,19 @@ public class StillFaceDAO {
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            this.closeConnection();
             importData = new HashMap<>();
             // Iterate over the results and populate the map with StillFaceImportData objects
             while(resultSet.next()){
                 int iid = resultSet.getInt("iid");
                 String filename = resultSet.getString("filename");
-                int year = resultSet.getInt("year");
+                int year = resultSet.getInt("syear");
                 int familyID = resultSet.getInt("fid");
                 int participantNumber = resultSet.getInt("pid");
                 String alias = resultSet.getString("alias");
                 Date date = resultSet.getDate("date");
                 importData.put(iid, new StillFaceImportData(iid, filename, year, familyID, participantNumber, alias, date));
             }
+            this.closeConnection();
             return importData;
         }
         catch (SQLException e){
@@ -143,12 +138,12 @@ public class StillFaceDAO {
             PreparedStatement statement = this.databaseConnection.getConnection()
                     .prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.execute();
-            this.closeConnection();
             ResultSet resultSet = statement.getGeneratedKeys();
             int generatedKey = -1;
             while(resultSet.next()){
                 generatedKey = resultSet.getInt(1);
             }
+            this.closeConnection();
             return generatedKey;
         }
         catch(SQLException e){
@@ -178,7 +173,6 @@ public class StillFaceDAO {
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            this.closeConnection();
             codeDataMap = new HashMap<>();
             while(resultSet.next()){
                 int dataID = resultSet.getInt("did");
@@ -191,6 +185,7 @@ public class StillFaceDAO {
                 codeDataMap.put(dataID, new StillFaceCodeData(dataID, iid, time, duration,
                         new StillFaceCode(codeID, codeName), comment));
             }
+            this.closeConnection();
             return codeDataMap;
         }
         catch(SQLException e){
@@ -220,7 +215,6 @@ public class StillFaceDAO {
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            this.closeConnection();
             codeDataMap = new HashMap<>();
             while(resultSet.next()){
                 int dataID = resultSet.getInt("did");
@@ -233,6 +227,7 @@ public class StillFaceDAO {
                 codeDataMap.put(dataID, new StillFaceCodeData(dataID, iid, time, duration,
                         new StillFaceCode(codeID, codeName), comment));
             }
+            this.closeConnection();
             return codeDataMap;
         }
         catch(SQLException e){
@@ -284,12 +279,12 @@ public class StillFaceDAO {
             PreparedStatement statement = this.databaseConnection.getConnection()
                     .prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.execute();
-            this.closeConnection();
             ResultSet resultSet = statement.getGeneratedKeys();
             int generatedKey = -1;
             while(resultSet.next()){
                 generatedKey = resultSet.getInt(1);
             }
+            this.closeConnection();
             return generatedKey;
         }
         catch(SQLException e){
@@ -317,13 +312,13 @@ public class StillFaceDAO {
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            this.closeConnection();
             codeMap = new HashMap<>();
             while(resultSet.next()){
                 int cid = resultSet.getInt("cid");
                 String name = resultSet.getString("name");
                 codeMap.put(cid, new StillFaceCode(cid, name));
             }
+            this.closeConnection();
             return codeMap;
         }
         catch(SQLException e){
@@ -400,12 +395,12 @@ public class StillFaceDAO {
             PreparedStatement statement = this.databaseConnection.getConnection()
                     .prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.execute();
-            this.closeConnection();
             ResultSet resultSet = statement.getGeneratedKeys();
             int generatedKey = -1;
             while(resultSet.next()){
                 generatedKey = resultSet.getInt(1);
             }
+            this.closeConnection();
             return generatedKey;
         }
         catch(SQLException e){
@@ -433,13 +428,13 @@ public class StillFaceDAO {
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            this.closeConnection();
             tagMap = new HashMap<>();
             while(resultSet.next()){
                 int tid = resultSet.getInt("tid");
                 String value = resultSet.getString("value");
                 tagMap.put(tid, new StillFaceTag(tid, value));
             }
+            this.closeConnection();
             return tagMap;
         }
         catch(SQLException e){
@@ -509,10 +504,10 @@ public class StillFaceDAO {
         try{
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
-            statement.executeQuery(createImportTableQuery);
-            statement.executeQuery(createDataTableQuery);
-            statement.executeQuery(createCodeTableQuery);
-            statement.executeQuery(createTagTableQuery);
+            statement.executeUpdate(createImportTableQuery);
+            statement.executeUpdate(createDataTableQuery);
+            statement.executeUpdate(createCodeTableQuery);
+            statement.executeUpdate(createTagTableQuery);
             this.closeConnection();
             return true;
         }
@@ -523,7 +518,27 @@ public class StillFaceDAO {
     }
 
     public boolean dropTables(){
-        return false;
+        // Initialize all the queries
+        String dropImportTableQuery = this.queryBuilder.buildDropSFImportTable();
+        String dropDataTableQuery = this.queryBuilder.buildDropSFDataTable();
+        String dropCodeTableQuery = this.queryBuilder.buildDropSFCodesTable();
+        String dropTagTableQuery = this.queryBuilder.buildDropSFTagsTable();
+
+        // Execute the queries
+        try{
+            this.openConnection();
+            Statement statement = this.databaseConnection.getConnection().createStatement();
+            statement.executeUpdate(dropImportTableQuery);
+            statement.executeUpdate(dropDataTableQuery);
+            statement.executeUpdate(dropCodeTableQuery);
+            statement.executeUpdate(dropTagTableQuery);
+            this.closeConnection();
+            return true;
+        }
+        catch(SQLException e){
+            PMLogger.getInstance().error("Unable to drop database table: " + e.getMessage());
+            return false;
+        }
     }
 
 
@@ -583,6 +598,28 @@ public class StillFaceDAO {
      */
     public void unlockConnection(){
         this.connectionLocked = false;
+    }
+
+    public boolean isDatabaseInitialized(){
+        // Set up the queries
+        String checkImportTable = "SELECT COUNT(*) FROM sf_imports";
+        String checkDataTable = "SELECT COUNT(*) FROM sf_data";
+        String checkCodesTable = "SELECT COUNT(*) FROM sf_codes";
+        String checkTagsTable = "SELECT COUNT(*) FROM sf_tags";
+
+        try{
+            this.openConnection();
+            this.databaseConnection.getConnection().createStatement().executeQuery(checkImportTable);
+            this.databaseConnection.getConnection().createStatement().executeQuery(checkDataTable);
+            this.databaseConnection.getConnection().createStatement().executeQuery(checkCodesTable);
+            this.databaseConnection.getConnection().createStatement().executeQuery(checkTagsTable);
+            this.closeConnection();
+            return true;
+        }
+        catch (SQLException e){
+            PMLogger.getInstance().error("Caught exception checking database status: " + e.getMessage());
+            return false;
+        }
     }
 
 

@@ -9,7 +9,8 @@ public class StillFaceCodeData {
     private StillFaceCode code;
     private String comment;
 
-    public StillFaceCodeData(int time, int duration, StillFaceCode code, String comment){
+    public StillFaceCodeData(int importID, int time, int duration, StillFaceCode code, String comment){
+        this.importID = importID;
         this.setTime(time);
         this.setDuration(duration);
         this.setCode(code);

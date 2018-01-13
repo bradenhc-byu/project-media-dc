@@ -37,7 +37,7 @@ public class CodedVideoCSVParser {
 
                 // Strip away the header contents from the CSV file (if it exists)
                 try{
-                    videoData.addCodeData(new StillFaceCodeData(Integer.parseInt(data[0]),
+                    videoData.addCodeData(new StillFaceCodeData(0, Integer.parseInt(data[0]),
                             Integer.parseInt(data[1]),
                             new StillFaceCode(data[2]),
                             data[3]));

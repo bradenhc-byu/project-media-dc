@@ -5,11 +5,15 @@ import com.byu.pmedia.model.StillFaceCodeData;
 import com.byu.pmedia.model.StillFaceImportData;
 import com.byu.pmedia.model.StillFaceTag;
 
+import java.sql.PreparedStatement;
+
+
 public class StillFaceQueryBuilder {
 
-    public StillFaceQueryBuilder(){
-
-    }
+    private final String IMPORT_TABLE_NAME = "sf_imports";
+    private final String DATA_TABLE_NAME = "sf_data";
+    private final String CODES_TABLE_NAME = "sf_codes";
+    private final String TAGS_TABLE_NAME = "sf_tags";
 
     //
     // SELECT statements
@@ -38,7 +42,7 @@ public class StillFaceQueryBuilder {
         }
         return "SELECT d.*, c.name " +
                 "FROM sf_data d " +
-                "INNER JOIN sf_codes c ON d.cid = c.cid " +
+                "INNER JOIN sf_codes c ON c.cid = d.cid " +
                 "WHERE " + importIDCondition;
     }
 
@@ -89,29 +93,29 @@ public class StillFaceQueryBuilder {
 
     public String buildInsertImport(StillFaceImportData importData){
         return "INSERT INTO sf_imports " +
-                "(filename, year, fid, pid, alias) " +
-                "VALUES(\"" + importData.getFilename() + "\", " + importData.getYear() + ", " +
-                importData.getFamilyID() + ", " + importData.getParticipantNumber() + ", \"" +
-                importData.getAlias() + "\")";
+                "(filename, syear, fid, pid, alias, date) " +
+                "VALUES('" + importData.getFilename() + "', " + importData.getYear() + ", " +
+                importData.getFamilyID() + ", " + importData.getParticipantNumber() + ", '" +
+                importData.getAlias() + "', '" + importData.getDate().toString() + "')";
     }
 
     public String buildInsertCodeData(StillFaceCodeData data){
         return "INSERT INTO sf_data " +
                 "(iid, time, duration, cid, comment) " +
                 "VALUES(" + data.getImportID() + ", " + data.getTime() + ", " + data.getDuration() + ", " +
-                data.getCode().getCodeID() + ", \"" + data.getComment() + "\")";
+                data.getCode().getCodeID() + ", '" + data.getComment() + "')";
     }
 
     public String buildInsertNewCode(StillFaceCode code){
         return "INSERT INTO sf_codes " +
                 "(name) " +
-                "VALUES(\"" + code.getName() + "\")";
+                "VALUES('" + code.getName() + "')";
     }
 
     public String buildInsertNewTag(StillFaceTag tag){
         return "INSERT INTO sf_tags " +
                 "(value) " +
-                "VALUES(\"" + tag.getTagValue() + "\")";
+                "VALUES('" + tag.getTagValue() + "')";
     }
 
     //
@@ -121,10 +125,10 @@ public class StillFaceQueryBuilder {
     public String buildUpdateImport(StillFaceImportData importData){
         return "UPDATE sf_imports " +
                 "SET " +
-                "year = " + importData.getYear() + ", " +
+                "syear = " + importData.getYear() + ", " +
                 "fid = " + importData.getFamilyID() + ", " +
                 "pid = " + importData.getParticipantNumber() + ", " +
-                "alias = \"" + importData.getAlias() + "\" " +
+                "alias = '" + importData.getAlias() + "' " +
                 "WHERE iid = " + importData.getImportID();
     }
 
@@ -134,21 +138,21 @@ public class StillFaceQueryBuilder {
                 "time = " + data.getTime() + ", " +
                 "duration = " + data.getDuration() + ", " +
                 "cid = " + data.getCode().getCodeID() + ", " +
-                "comment = \"" + data.getComment() + "\" " +
+                "comment = '" + data.getComment() + "' " +
                 "WHERE did = " + data.getDataID();
     }
 
     public String buildUpdateExistingCode(StillFaceCode code){
         return "UPDATE sf_codes " +
                 "SET " +
-                "name = \"" + code.getName() + "\" " +
+                "name = '" + code.getName() + "' " +
                 "WHERE cid = " + code.getCodeID();
     }
 
     public String buildUpdateExistingTag(StillFaceTag tag){
         return "UPDATE sf_tags " +
                 "SET " +
-                "value = \"" + tag.getTagValue() + "\" " +
+                "value = '" + tag.getTagValue() + "' " +
                 "WHERE tid = " + tag.getTagID();
     }
 
@@ -174,7 +178,7 @@ public class StillFaceQueryBuilder {
                 "(\n" +
                 "    iid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
                 "    filename VARCHAR(200) NOT NULL,\n" +
-                "    year INT NOT NULL,\n" +
+                "    syear INT NOT NULL,\n" +
                 "    fid INT NOT NULL,\n" +
                 "    pid INT NOT NULL,\n" +
                 "    alias VARCHAR(200),\n" +
@@ -190,7 +194,6 @@ public class StillFaceQueryBuilder {
                 "    iid INT NOT NULL,\n" +
                 "    time INT NOT NULL,\n" +
                 "    duration INT NOT NULL,\n" +
-                "    pid INT NOT NULL,\n" +
                 "    cid INT NOT NULL,\n" +
                 "    comment VARCHAR(500)\n" +
                 ")";
@@ -227,5 +230,25 @@ public class StillFaceQueryBuilder {
 
             default: return "AUTO INCREMENT";
         }
+    }
+
+    //
+    // DROP TABLE statements
+    //
+
+    public String buildDropSFImportTable(){
+        return "DROP TABLE sf_imports";
+    }
+
+    public String buildDropSFDataTable(){
+        return "DROP TABLE sf_data";
+    }
+
+    public String buildDropSFCodesTable(){
+        return "DROP TABLE sf_codes";
+    }
+
+    public String buildDropSFTagsTable(){
+        return "DROP TABLE sf_tags";
     }
 }

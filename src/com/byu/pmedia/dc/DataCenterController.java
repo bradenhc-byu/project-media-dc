@@ -1,10 +1,15 @@
 package com.byu.pmedia.dc;
 
 import com.byu.pmedia.gui.DataCenterClientGUI;
+import com.byu.pmedia.gui.DataCenterSplashScreen;
 
 import javax.swing.*;
 
 public class DataCenterController {
+
+    private static void initialize(){
+        DataCenterSplashScreen splashScreen = new DataCenterSplashScreen();
+    }
 
     private static void displayGUI(){
         JFrame frame = new JFrame("ProjectMEDIA Data Center");
@@ -18,6 +23,7 @@ public class DataCenterController {
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable(){
             public void run(){
+                initialize();
                 displayGUI();
             }
         });

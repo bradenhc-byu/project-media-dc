@@ -8,8 +8,8 @@ import java.sql.SQLException;
 
 public class DerbyDatabaseConnection implements IDatabaseConnection {
 
-    private String host = "localhost";
-    private String port = "1527";
+    private String host;
+    private String port;
     private String dbname;
     private String user;
     private String password;
@@ -22,7 +22,7 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
         this.host = host;
         this.port = port;
         this.dbname = dbname;
-        this.url = String.format("jdbc:derby://%s:%s/%s",
+        this.url = String.format("jdbc:derby://%s:%s/%s;create=true",
                 this.host, this.port, this.dbname);
     }
 
@@ -32,7 +32,7 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
         this.dbname = dbname;
         this.user = user;
         this.password = password;
-        this.url = String.format("jdbc:derby://%s:%s/%s;user=%s;password=%s",
+        this.url = String.format("jdbc:derby://%s:%s/%s;user=%s;password=%s;create=true",
                 this.host, this.port, this.dbname, this.user, this.password);
     }
 
