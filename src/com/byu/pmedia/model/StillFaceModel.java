@@ -3,6 +3,8 @@ package com.byu.pmedia.model;
 import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.database.StillFaceDAO;
 import com.byu.pmedia.log.PMLogger;
+import com.googlecode.cqengine.ConcurrentIndexedCollection;
+import com.googlecode.cqengine.IndexedCollection;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -10,12 +12,15 @@ import java.util.Map;
 
 public class StillFaceModel {
 
-    private StillFaceDAO dao;
+    private StillFaceDAO dao;               // Database Access Object for the model
+    private boolean cached;                 // If true, the sf_data table is cached in memory to this object at initialization
+                                            // and retrieving data from the model will not refer to the database server
+    private boolean initialized = false;    // Flag to check if the model has been initialized
 
-    private Map<Integer, StillFaceCode> stillFaceCodeMap = new HashMap<>();
-    private Map<Integer, StillFaceTag> stillFaceTagMap = new HashMap<>();
-    private Map<Integer, StillFaceImportData> stillFaceImportDataMap = new HashMap<>();
-    private Map<Integer, StillFaceCodeData> stillFaceCodeDataMap = new HashMap<>();
+    private IndexedCollection<StillFaceImportData> importDataCollection = new ConcurrentIndexedCollection<>();
+    private IndexedCollection<StillFaceCodeData> dataCollection = new ConcurrentIndexedCollection<>();
+    private IndexedCollection<StillFaceCode> codeCollection = new ConcurrentIndexedCollection<>();
+    private IndexedCollection<StillFaceTag> tagCollection = new ConcurrentIndexedCollection<>();
 
     private static StillFaceModel singleton;
 
@@ -30,22 +35,92 @@ public class StillFaceModel {
         try {
             this.dao = dao;
             this.dao.lockConnection();
-            stillFaceCodeMap = this.dao.getCode(0);
-            stillFaceTagMap = this.dao.getTag(0);
-            stillFaceImportDataMap = this.dao.getImportData(0);
-            if (StillFaceConfig.getInstance().getAsBoolean("model.cache")) {
-                stillFaceCodeDataMap = this.dao.getCodeDataFromImport(0);
+            this.cached = StillFaceConfig.getInstance().getAsBoolean("model.cache");
+            this.importDataCollection = this.dao.getImportData(0);
+            this.codeCollection = this.dao.getCode(0);
+            this.tagCollection = this.dao.getTag(0);
+            if(this.cached){
+                this.dataCollection = this.dao.getCodeDataFromImport(0);
             }
             this.dao.unlockConnection();
             this.dao.closeConnection();
+            this.initialized = true;
+            return true;
         }
         catch (SQLException e){
             PMLogger.getInstance().error("Error initializing model: " + e.getMessage());
             return false;
         }
-        return true;
     }
 
+    public boolean isCached() {
+        return cached;
+    }
 
+    public IndexedCollection<StillFaceImportData> getImportDataCollection() {
+        return importDataCollection;
+    }
 
+    public IndexedCollection<StillFaceCodeData> getDataCollection() {
+        return dataCollection;
+    }
+
+    public IndexedCollection<StillFaceCode> getCodeCollection() {
+        return codeCollection;
+    }
+
+    public IndexedCollection<StillFaceTag> getTagCollection() {
+        return tagCollection;
+    }
+
+    public boolean refreshImportData(){
+        if(this.initialized){
+            IndexedCollection<StillFaceImportData> tmpCollection = this.dao.getImportData(0);
+            if(tmpCollection == null){
+                PMLogger.getInstance().warn("Failed to refresh import data");
+                return false;
+            }
+            this.importDataCollection = tmpCollection;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean refreshVideoData(){
+        if(this.initialized && this.cached){
+            IndexedCollection<StillFaceCodeData> tmpCollection = this.dao.getCodeDataFromImport(0);
+            if(tmpCollection == null){
+                PMLogger.getInstance().warn("Failed to refresh coded video data data");
+                return false;
+            }
+            this.dataCollection = tmpCollection;
+            return true;
+        }
+        return !this.cached;
+    }
+
+    public boolean refreshCodes(){
+        if(this.initialized){
+            IndexedCollection<StillFaceCode> tmpCollection = this.dao.getCode(0);
+            if(tmpCollection == null){
+                PMLogger.getInstance().warn("Failed to refresh codes");
+                return false;
+            }
+            this.codeCollection = tmpCollection;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean refreshTags(){
+        if(this.initialized){
+            IndexedCollection<StillFaceTag> tmpCollection = this.dao.getTag(0);
+            if(tmpCollection != null){
+                this.tagCollection = tmpCollection;
+                return true;
+            }
+        }
+        PMLogger.getInstance().warn("Failed to refresh tags");
+        return false;
+    }
 }

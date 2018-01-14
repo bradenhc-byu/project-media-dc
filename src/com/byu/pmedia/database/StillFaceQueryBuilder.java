@@ -93,10 +93,11 @@ public class StillFaceQueryBuilder {
 
     public String buildInsertImport(StillFaceImportData importData){
         return "INSERT INTO sf_imports " +
-                "(filename, syear, fid, pid, alias, date) " +
+                "(filename, syear, fid, pid, tid, alias, date) " +
                 "VALUES('" + importData.getFilename() + "', " + importData.getYear() + ", " +
-                importData.getFamilyID() + ", " + importData.getParticipantNumber() + ", '" +
-                importData.getAlias() + "', '" + importData.getDate().toString() + "')";
+                importData.getFamilyID() + ", " + importData.getParticipantNumber() + ", " +
+                importData.getTag().getTagID() + ", '" + importData.getAlias() + "', '" +
+                importData.getDate().toString() + "')";
     }
 
     public String buildInsertCodeData(StillFaceCodeData data){
@@ -128,6 +129,7 @@ public class StillFaceQueryBuilder {
                 "syear = " + importData.getYear() + ", " +
                 "fid = " + importData.getFamilyID() + ", " +
                 "pid = " + importData.getParticipantNumber() + ", " +
+                "tid = " + importData.getTag().getTagID() + ", " +
                 "alias = '" + importData.getAlias() + "' " +
                 "WHERE iid = " + importData.getImportID();
     }
@@ -181,6 +183,7 @@ public class StillFaceQueryBuilder {
                 "    syear INT NOT NULL,\n" +
                 "    fid INT NOT NULL,\n" +
                 "    pid INT NOT NULL,\n" +
+                "    tid INT NOT NULL,\n" +
                 "    alias VARCHAR(200),\n" +
                 "    date DATE NOT NULL\n" +
                 ")";

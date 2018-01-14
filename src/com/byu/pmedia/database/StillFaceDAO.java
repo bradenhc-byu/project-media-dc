@@ -5,6 +5,14 @@ import com.byu.pmedia.model.StillFaceCode;
 import com.byu.pmedia.model.StillFaceCodeData;
 import com.byu.pmedia.model.StillFaceImportData;
 import com.byu.pmedia.model.StillFaceTag;
+import com.googlecode.cqengine.ConcurrentIndexedCollection;
+import com.googlecode.cqengine.IndexedCollection;
+import com.googlecode.cqengine.index.Index;
+import com.googlecode.cqengine.index.fallback.FallbackIndex;
+import com.googlecode.cqengine.index.hash.HashIndex;
+import com.googlecode.cqengine.index.navigable.NavigableIndex;
+import com.googlecode.cqengine.index.radix.RadixTreeIndex;
+import com.googlecode.cqengine.index.support.PartialIndex;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -59,12 +67,20 @@ public class StillFaceDAO {
      *
      * @return A map of StillFaceImportData objects with their respective import IDs as the key
      */
-    public Map<Integer, StillFaceImportData> getImportData(int importID){
+    public IndexedCollection<StillFaceImportData> getImportData(int importID){
         // Create the query
         String query = this.queryBuilder.buildSelectImportData(importID);
 
         // Initialize the map
-        Map<Integer, StillFaceImportData> importData;
+        IndexedCollection<StillFaceImportData> importDataCollection = new ConcurrentIndexedCollection<>();
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.IMPORT_ID));
+        importDataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceImportData.FILENAME));
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.YEAR));
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.FAMILY_ID));
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.PARTICIPANT_ID));
+        importDataCollection.addIndex(HashIndex.onAttribute(StillFaceImportData.TAG));
+        importDataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceImportData.ALIAS));
+        importDataCollection.addIndex(HashIndex.onAttribute(StillFaceImportData.DATE));
 
         // Get the data
         try {
@@ -72,7 +88,6 @@ public class StillFaceDAO {
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            importData = new HashMap<>();
             // Iterate over the results and populate the map with StillFaceImportData objects
             while(resultSet.next()){
                 int iid = resultSet.getInt("iid");
@@ -80,12 +95,15 @@ public class StillFaceDAO {
                 int year = resultSet.getInt("syear");
                 int familyID = resultSet.getInt("fid");
                 int participantNumber = resultSet.getInt("pid");
+                int tid = resultSet.getInt("tid");
+                String tValue = resultSet.getString("value");
                 String alias = resultSet.getString("alias");
                 Date date = resultSet.getDate("date");
-                importData.put(iid, new StillFaceImportData(iid, filename, year, familyID, participantNumber, alias, date));
+                importDataCollection.add(new StillFaceImportData(iid, filename, year, familyID, participantNumber,
+                        new StillFaceTag(tid, tValue), alias, date));
             }
             this.closeConnection();
-            return importData;
+            return importDataCollection;
         }
         catch (SQLException e){
             PMLogger.getInstance().error("Could not get import data: " + e.getMessage());
@@ -161,19 +179,24 @@ public class StillFaceDAO {
      *
      * @return A map of integer data ID, StillFaceCodeData object pairs if the query succeeds. Null otherwise.
      */
-    public Map<Integer, StillFaceCodeData> getCodeDataFromImport(int importID){
+    public IndexedCollection<StillFaceCodeData> getCodeDataFromImport(int importID){
         // Create the query
         String query = this.queryBuilder.buildSelectCodeDataFromImport(importID);
 
-        // Prepare a map of StillFaceCodeData
-        Map<Integer, StillFaceCodeData> codeDataMap;
+        // Prepare an indexed collection of StillFaceCodeData
+        IndexedCollection<StillFaceCodeData> dataCollection = new ConcurrentIndexedCollection<>();
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DATA_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.IMPORT_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.TIME));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DURATION));
+        dataCollection.addIndex(HashIndex.onAttribute(StillFaceCodeData.CODE));
+        dataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceCodeData.COMMENT));
 
         // Execute the query
         try{
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            codeDataMap = new HashMap<>();
             while(resultSet.next()){
                 int dataID = resultSet.getInt("did");
                 int iid = resultSet.getInt("iid");
@@ -182,11 +205,11 @@ public class StillFaceDAO {
                 int codeID = resultSet.getInt("cid");
                 String comment = resultSet.getString("comment");
                 String codeName = resultSet.getString("name");
-                codeDataMap.put(dataID, new StillFaceCodeData(dataID, iid, time, duration,
+                dataCollection.add(new StillFaceCodeData(dataID, iid, time, duration,
                         new StillFaceCode(codeID, codeName), comment));
             }
             this.closeConnection();
-            return codeDataMap;
+            return dataCollection;
         }
         catch(SQLException e){
             PMLogger.getInstance().error("Unable to retrieve code data: " + e.getMessage());
@@ -203,19 +226,24 @@ public class StillFaceDAO {
      *
      * @return A Map of integer data ID, StillFaceCodeData object pairs if successful. Null otherwise.
      */
-    public Map<Integer, StillFaceCodeData> getCodeDataFromFamilyID(int familyID){
+    public IndexedCollection<StillFaceCodeData> getCodeDataFromFamilyID(int familyID){
         // Create the query
         String query = this.queryBuilder.buildSelectCodeDataFromFamilyID(familyID);
 
-        // Prepare a map of StillFaceCodeData
-        Map<Integer, StillFaceCodeData> codeDataMap;
+        // Prepare an indexed collection of StillFaceCodeData
+        IndexedCollection<StillFaceCodeData> dataCollection = new ConcurrentIndexedCollection<>();
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DATA_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.IMPORT_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.TIME));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DURATION));
+        dataCollection.addIndex(HashIndex.onAttribute(StillFaceCodeData.CODE));
+        dataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceCodeData.COMMENT));
 
         // Execute the query
         try{
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            codeDataMap = new HashMap<>();
             while(resultSet.next()){
                 int dataID = resultSet.getInt("did");
                 int iid = resultSet.getInt("iid");
@@ -224,11 +252,11 @@ public class StillFaceDAO {
                 int codeID = resultSet.getInt("cid");
                 String comment = resultSet.getString("comment");
                 String codeName = resultSet.getString("name");
-                codeDataMap.put(dataID, new StillFaceCodeData(dataID, iid, time, duration,
+                dataCollection.add(new StillFaceCodeData(dataID, iid, time, duration,
                         new StillFaceCode(codeID, codeName), comment));
             }
             this.closeConnection();
-            return codeDataMap;
+            return dataCollection;
         }
         catch(SQLException e){
             PMLogger.getInstance().error("Unable to retrieve code data: " + e.getMessage());
@@ -300,26 +328,27 @@ public class StillFaceDAO {
      *
      * @return A populated map of integer code ID, StillFaceCode object pairs if successful. Null otherwise.
      */
-    public Map<Integer, StillFaceCode> getCode(int codeID){
+    public IndexedCollection<StillFaceCode> getCode(int codeID){
         // Create the query
         String query = this.queryBuilder.buildSelectCode(codeID);
 
         // Prepare the map
-        Map<Integer, StillFaceCode> codeMap;
+        IndexedCollection<StillFaceCode> codeCollection = new ConcurrentIndexedCollection<>();
+        codeCollection.addIndex(NavigableIndex.onAttribute(StillFaceCode.CODE_ID));
+        codeCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceCode.NAME));
 
         // Execute the query
         try{
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            codeMap = new HashMap<>();
             while(resultSet.next()){
                 int cid = resultSet.getInt("cid");
                 String name = resultSet.getString("name");
-                codeMap.put(cid, new StillFaceCode(cid, name));
+                codeCollection.add(new StillFaceCode(cid, name));
             }
             this.closeConnection();
-            return codeMap;
+            return codeCollection;
         }
         catch(SQLException e){
             PMLogger.getInstance().error("Unable to retrieve code: " + e.getMessage());
@@ -416,26 +445,27 @@ public class StillFaceDAO {
      *
      * @return A map of integer tag ID, StillFaceTag object pairs if successful. Null otherwise.
      */
-    public Map<Integer, StillFaceTag> getTag(int tagID){
+    public IndexedCollection<StillFaceTag> getTag(int tagID){
         // Create the query
         String query = this.queryBuilder.buildSelectTag(tagID);
 
         // Prepare the map
-        Map<Integer, StillFaceTag> tagMap;
+        IndexedCollection<StillFaceTag> tagCollection = new ConcurrentIndexedCollection<>();
+        tagCollection.addIndex(NavigableIndex.onAttribute(StillFaceTag.TAG_ID));
+        tagCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceTag.TAG_VALUE));
 
         // Execute the query
         try{
             this.openConnection();
             Statement statement = this.databaseConnection.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-            tagMap = new HashMap<>();
             while(resultSet.next()){
                 int tid = resultSet.getInt("tid");
                 String value = resultSet.getString("value");
-                tagMap.put(tid, new StillFaceTag(tid, value));
+                tagCollection.add(new StillFaceTag(tid, value));
             }
             this.closeConnection();
-            return tagMap;
+            return tagCollection;
         }
         catch(SQLException e){
             PMLogger.getInstance().error("Unable to retrieve tag information: " + e.getMessage());
