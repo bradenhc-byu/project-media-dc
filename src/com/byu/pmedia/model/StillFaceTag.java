@@ -39,4 +39,9 @@ public class StillFaceTag {
     public String getTagValue() {
         return tagValue;
     }
+
+    @Override
+    public String toString(){
+        return this.getTagValue();
+    }
 }

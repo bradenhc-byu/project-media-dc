@@ -1,32 +1,39 @@
 package com.byu.pmedia.client;
 
-import com.byu.pmedia.view.DataCenterClientGUI;
 import com.byu.pmedia.view.DataCenterSplashScreen;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-import javax.swing.*;
+public class StillFaceDataCenterClient extends Application {
 
-public class StillFaceDataCenterClient {
+    @Override
+    public void init(){
 
-    private static void initialize(){
-        DataCenterSplashScreen splashScreen = new DataCenterSplashScreen();
     }
 
-    private static void displayGUI(){
-        JFrame frame = new JFrame("ProjectMEDIA Data Center");
-        frame.setContentPane(new DataCenterClientGUI().getMainPanel());
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        // Show splash screen while initializing
+        DataCenterSplashScreen splashScreen = new DataCenterSplashScreen();
+
+        // Display the main gui
+        Parent root = FXMLLoader.load(getClass().getResource("/com/byu/pmedia/view/stillfacefxgui.fxml"));
+        Scene scene = new Scene(root);
+        primaryStage.setTitle("ProjectMEDIA Data Center");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    @Override
+    public void stop(){
+
     }
 
 
     public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable(){
-            public void run(){
-                initialize();
-                displayGUI();
-            }
-        });
+        launch(args);
     }
 }

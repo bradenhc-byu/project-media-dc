@@ -1,5 +1,6 @@
 package com.byu.pmedia.database;
 
+import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceCode;
 import com.byu.pmedia.model.StillFaceCodeData;
@@ -7,22 +8,61 @@ import com.byu.pmedia.model.StillFaceImportData;
 import com.byu.pmedia.model.StillFaceTag;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.index.Index;
-import com.googlecode.cqengine.index.fallback.FallbackIndex;
 import com.googlecode.cqengine.index.hash.HashIndex;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.index.radix.RadixTreeIndex;
-import com.googlecode.cqengine.index.support.PartialIndex;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public class StillFaceDAO {
 
     private IDatabaseConnection databaseConnection;
     private StillFaceQueryBuilder queryBuilder = new StillFaceQueryBuilder();
     private boolean connectionLocked = false;
+
+    public static StillFaceDAO generateFromConfig(){
+        DatabaseMode mode = DatabaseMode.valueOf(StillFaceConfig.getInstance().getAsString("database.mode"));
+        String host = StillFaceConfig.getInstance().getAsString("database.host");
+        String port = StillFaceConfig.getInstance().getAsString("database.port");
+        String dbname = StillFaceConfig.getInstance().getAsString("database.name");
+        String user = StillFaceConfig.getInstance().getAsString("database.user");
+        String password = StillFaceConfig.getInstance().getAsString("database.password");
+        String filepath = StillFaceConfig.getInstance().getAsString("database.filepath");
+        if(mode == null){
+            PMLogger.getInstance().error("Unable to generate DAO: config mode is null");
+            return null;
+        }
+        switch (mode){
+            case DERBY:
+                DerbyDatabaseConnection derbyDatabaseConnection;
+
+                if(!user.equals("") && !password.equals("")){
+                    derbyDatabaseConnection = new DerbyDatabaseConnection(host, port, dbname, user, password);
+                }
+                else{
+                    derbyDatabaseConnection = new DerbyDatabaseConnection(host, port, dbname);
+                }
+                return new StillFaceDAO(derbyDatabaseConnection);
+
+            case AZURE:
+                return new StillFaceDAO(new AzureDatabaseConnection(host, port, dbname, user, password));
+
+            case HSQLDB:
+                HsqlDatabaseConnection hsqlDatabaseConnection;
+
+                if(!user.equals("") && !password.equals("")){
+                    hsqlDatabaseConnection = new HsqlDatabaseConnection(filepath, dbname, user, password);
+                }
+                else{
+                    hsqlDatabaseConnection = new HsqlDatabaseConnection(filepath, dbname);
+                }
+                return new StillFaceDAO(hsqlDatabaseConnection);
+
+                default:
+                    PMLogger.getInstance().error("Unable to generate DAO: unknown database mode");
+                    return null;
+        }
+    }
 
     public StillFaceDAO(IDatabaseConnection databaseConnection){
         this.databaseConnection = databaseConnection;
@@ -135,6 +175,29 @@ public class StillFaceDAO {
         catch(SQLException e){
             PMLogger.getInstance().error("Unable to update import data: " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * If a transaction goes wrong int he database, this method can be called to clean up any stray data and import
+     * entries associated with the import ID
+     *
+     * @param importID The ID associated with entries to remove from the database
+     */
+    public void cleanImportData(int importID){
+        String queryI = this.queryBuilder.buildDeleteImport(importID);
+        String queryD = this.queryBuilder.buildDeleteCodeDataFromImport(importID);
+        // Execute the query
+        try{
+            this.openConnection();
+            PreparedStatement statement = this.databaseConnection.getConnection().prepareStatement(queryI);
+            statement.executeUpdate();
+            statement = this.databaseConnection.getConnection().prepareStatement(queryD);
+            statement.executeUpdate();
+            this.closeConnection();
+        }
+        catch(SQLException e){
+            PMLogger.getInstance().error("Unable to update import data: " + e.getMessage());
         }
     }
 

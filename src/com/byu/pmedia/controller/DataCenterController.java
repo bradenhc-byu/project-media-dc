@@ -1,37 +1,68 @@
 package com.byu.pmedia.controller;
 
 import com.byu.pmedia.database.StillFaceDAO;
-import com.byu.pmedia.model.*;
-import com.byu.pmedia.parser.CodedVideoCSVParser;
-import com.byu.pmedia.view.DataCenterClientGUI;
-import com.byu.pmedia.view.DataCenterSplashScreen;
+import com.byu.pmedia.log.PMLogger;
+import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.TilePane;
+import javafx.stage.Stage;
 
-import javax.swing.*;
+import java.io.IOException;
 
-public class DataCenterController {
+public class DataCenterController extends Application{
+
+    public ListView listViewExplorer;
+    public Button buttonImportCSVData;
+    public Button buttonSettings;
+    public Button buttonExportToCSV;
+    public Button buttonPlot;
+    public Label labelDataTitle;
+    public TilePane tilePaneSummary;
+    public TableView tableData;
 
     private StillFaceDAO dao;
-    private DataCenterClientGUI gui;
 
-    public DataCenterController(StillFaceDAO dao, DataCenterClientGUI gui){
-        this.dao = dao;
-        this.gui = gui;
+    @Override
+    public void init(){
+
     }
 
-    public void importCSVData(StillFaceImportData importData){
-        StillFaceVideoData videoData = new StillFaceVideoData();
-        CodedVideoCSVParser parser = new CodedVideoCSVParser();
-        parser.parseFromCSVIntoCodedVideoData(importData.getFilename(), videoData);
-        this.dao.insertImportData(importData);
-        for(StillFaceCodeData data : videoData.getData()){
-            this.dao.insertCodeData(data);
+    @Override
+    public void start(Stage primaryStage) throws Exception{
+        this.dao = StillFaceDAO.generateFromConfig();
+    }
+
+    @Override
+    public void stop(){
+
+    }
+
+    public void onImportCSVData(ActionEvent actionEvent) {
+        try {
+            Stage stage = new Stage();
+            Parent root = FXMLLoader.load(getClass().getResource("/com/byu/pmedia/view/stillfaceimportgui.fxml"));
+            Scene scene = new Scene(root);
+            stage.setTitle("Import CSV");
+            stage.setScene(scene);
+            stage.showAndWait();
         }
-        StillFaceModel.getInstance().refreshImportData();
-        StillFaceModel.getInstance().refreshVideoData();
-        this.gui.update();
+        catch(IOException e){
+            PMLogger.getInstance().error("Unable to open import dialogue: " + e.getMessage());
+        }
     }
 
-    public void save(){
+    public void onSettings(ActionEvent actionEvent) {
+
+    }
+
+    public void onSync(ActionEvent actionEvent) {
 
     }
 }

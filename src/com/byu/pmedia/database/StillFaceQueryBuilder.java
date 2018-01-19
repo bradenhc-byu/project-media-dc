@@ -28,7 +28,7 @@ public class StillFaceQueryBuilder {
             importIDCondition = "iid = " + importID;
         }
         return "SELECT * " +
-                "FROM sf_imports " +
+                "FROM " + IMPORT_TABLE_NAME + " " +
                 "WHERE " + importIDCondition;
     }
 
@@ -41,8 +41,8 @@ public class StillFaceQueryBuilder {
             importIDCondition = "iid = " + importID;
         }
         return "SELECT d.*, c.name " +
-                "FROM sf_data d " +
-                "INNER JOIN sf_codes c ON c.cid = d.cid " +
+                "FROM " + DATA_TABLE_NAME + " d " +
+                "INNER JOIN " + CODES_TABLE_NAME + " c ON c.cid = d.cid " +
                 "WHERE " + importIDCondition;
     }
 
@@ -55,9 +55,9 @@ public class StillFaceQueryBuilder {
             familyIDCondition = "i.fid = " + familyID;
         }
         return "SELECT d.*, c.name " +
-                "FROM sf_data d " +
-                "INNER JOIN sf_imports i ON i.iid = d.iid " +
-                "INNER JOIN sf_codes c ON d.cid = c.cid " +
+                "FROM " + DATA_TABLE_NAME + " d " +
+                "INNER JOIN " + IMPORT_TABLE_NAME + " i ON i.iid = d.iid " +
+                "INNER JOIN " + CODES_TABLE_NAME + " c ON d.cid = c.cid " +
                 "WHERE " + familyIDCondition;
     }
 
@@ -70,7 +70,7 @@ public class StillFaceQueryBuilder {
             codeIDCondition = "cid = " + codeID;
         }
         return "SELECT * " +
-                "FROM sf_codes " +
+                "FROM " + CODES_TABLE_NAME + " " +
                 "WHERE " + codeIDCondition;
     }
 
@@ -83,7 +83,7 @@ public class StillFaceQueryBuilder {
             tagIDCondition = "tid = " + tagID;
         }
         return "SELECT * " +
-                "FROM sf_tags " +
+                "FROM " + TAGS_TABLE_NAME + " " +
                 "WHERE " + tagIDCondition;
     }
 
@@ -92,7 +92,7 @@ public class StillFaceQueryBuilder {
     //
 
     public String buildInsertImport(StillFaceImportData importData){
-        return "INSERT INTO sf_imports " +
+        return "INSERT INTO " + IMPORT_TABLE_NAME + " " +
                 "(filename, syear, fid, pid, tid, alias, date) " +
                 "VALUES('" + importData.getFilename() + "', " + importData.getYear() + ", " +
                 importData.getFamilyID() + ", " + importData.getParticipantNumber() + ", " +
@@ -101,20 +101,20 @@ public class StillFaceQueryBuilder {
     }
 
     public String buildInsertCodeData(StillFaceCodeData data){
-        return "INSERT INTO sf_data " +
+        return "INSERT INTO " + DATA_TABLE_NAME + " " +
                 "(iid, time, duration, cid, comment) " +
                 "VALUES(" + data.getImportID() + ", " + data.getTime() + ", " + data.getDuration() + ", " +
                 data.getCode().getCodeID() + ", '" + data.getComment() + "')";
     }
 
     public String buildInsertNewCode(StillFaceCode code){
-        return "INSERT INTO sf_codes " +
+        return "INSERT INTO " + CODES_TABLE_NAME + " " +
                 "(name) " +
                 "VALUES('" + code.getName() + "')";
     }
 
     public String buildInsertNewTag(StillFaceTag tag){
-        return "INSERT INTO sf_tags " +
+        return "INSERT INTO " + TAGS_TABLE_NAME + " " +
                 "(value) " +
                 "VALUES('" + tag.getTagValue() + "')";
     }
@@ -124,7 +124,7 @@ public class StillFaceQueryBuilder {
     //
 
     public String buildUpdateImport(StillFaceImportData importData){
-        return "UPDATE sf_imports " +
+        return "UPDATE " + IMPORT_TABLE_NAME + " " +
                 "SET " +
                 "syear = " + importData.getYear() + ", " +
                 "fid = " + importData.getFamilyID() + ", " +
@@ -135,7 +135,7 @@ public class StillFaceQueryBuilder {
     }
 
     public String buildUpdateCodeData(StillFaceCodeData data){
-        return "UPDATE sf_data " +
+        return "UPDATE " + DATA_TABLE_NAME + " " +
                 "SET " +
                 "time = " + data.getTime() + ", " +
                 "duration = " + data.getDuration() + ", " +
@@ -145,14 +145,14 @@ public class StillFaceQueryBuilder {
     }
 
     public String buildUpdateExistingCode(StillFaceCode code){
-        return "UPDATE sf_codes " +
+        return "UPDATE " + CODES_TABLE_NAME + " " +
                 "SET " +
                 "name = '" + code.getName() + "' " +
                 "WHERE cid = " + code.getCodeID();
     }
 
     public String buildUpdateExistingTag(StillFaceTag tag){
-        return "UPDATE sf_tags " +
+        return "UPDATE " + TAGS_TABLE_NAME + " " +
                 "SET " +
                 "value = '" + tag.getTagValue() + "' " +
                 "WHERE tid = " + tag.getTagID();
@@ -162,12 +162,16 @@ public class StillFaceQueryBuilder {
     // DELETE statements
     //
 
+    public String buildDeleteImport(int importID) { return "DELETE FROM " + IMPORT_TABLE_NAME + " WHERE iid = " + importID; }
+
+    public String buildDeleteCodeDataFromImport(int importID) { return "DELETE FROM " + DATA_TABLE_NAME + " WHERE iid = " + importID; }
+
     public String buildDeleteCode(StillFaceCode code){
-        return "DELETE FROM sf_codes WHERE cid = " + code.getCodeID();
+        return "DELETE FROM " + CODES_TABLE_NAME + " WHERE cid = " + code.getCodeID();
     }
 
     public String buildDeleteTag(StillFaceTag tag){
-        return "DELETE FROM sf_tags WHERE tid = " + tag.getTagID();
+        return "DELETE FROM " + TAGS_TABLE_NAME + " WHERE tid = " + tag.getTagID();
     }
 
     //
@@ -176,7 +180,7 @@ public class StillFaceQueryBuilder {
 
     public String buildCreateSFImportTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
-        return "CREATE TABLE sf_imports\n" +
+        return "CREATE TABLE " + IMPORT_TABLE_NAME + "\n" +
                 "(\n" +
                 "    iid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
                 "    filename VARCHAR(200) NOT NULL,\n" +
@@ -191,7 +195,7 @@ public class StillFaceQueryBuilder {
 
     public String buildCreateSFDataTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
-        return "CREATE TABLE sf_data\n" +
+        return "CREATE TABLE " + DATA_TABLE_NAME + "\n" +
                 "(\n" +
                 "    did INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
                 "    iid INT NOT NULL,\n" +
@@ -204,7 +208,7 @@ public class StillFaceQueryBuilder {
 
     public String buildCreateSFCodesTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
-        return "CREATE TABLE sf_codes\n" +
+        return "CREATE TABLE " + CODES_TABLE_NAME + "\n" +
                 "(\n" +
                 "    cid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
                 "    name VARCHAR(200) NOT NULL\n"+
@@ -213,7 +217,7 @@ public class StillFaceQueryBuilder {
 
     public String buildCreateSFTagsTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
-        return "CREATE TABLE sf_tags\n" +
+        return "CREATE TABLE " + TAGS_TABLE_NAME + "\n" +
                 "(\n" +
                 "    tid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
                 "    value VARCHAR(200) NOT NULL\n"+
@@ -240,18 +244,18 @@ public class StillFaceQueryBuilder {
     //
 
     public String buildDropSFImportTable(){
-        return "DROP TABLE sf_imports";
+        return "DROP TABLE " + IMPORT_TABLE_NAME + "";
     }
 
     public String buildDropSFDataTable(){
-        return "DROP TABLE sf_data";
+        return "DROP TABLE " + DATA_TABLE_NAME + "";
     }
 
     public String buildDropSFCodesTable(){
-        return "DROP TABLE sf_codes";
+        return "DROP TABLE " + CODES_TABLE_NAME + "";
     }
 
     public String buildDropSFTagsTable(){
-        return "DROP TABLE sf_tags";
+        return "DROP TABLE " + TAGS_TABLE_NAME + "";
     }
 }

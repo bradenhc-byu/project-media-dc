@@ -84,6 +84,8 @@ public class StillFaceCodeData {
         return dataID;
     }
 
+    public void setImportID(int importID) { this.importID = importID; }
+
     public int getImportID() {
         return importID;
     }

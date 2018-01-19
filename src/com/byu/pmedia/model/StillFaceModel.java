@@ -5,10 +5,12 @@ import com.byu.pmedia.database.StillFaceDAO;
 import com.byu.pmedia.log.PMLogger;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
+import com.googlecode.cqengine.query.Query;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+
+import static com.googlecode.cqengine.query.QueryFactory.*;
 
 public class StillFaceModel {
 

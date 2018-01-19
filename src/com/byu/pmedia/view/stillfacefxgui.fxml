@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane id="anchorePaneMain" prefHeight="900.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.byu.pmedia.controller.DataCenterController">
+   <padding>
+      <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+   </padding>
+   <children>
+      <SplitPane dividerPositions="0.2665995975855131" layoutX="426.0" layoutY="231.0" prefHeight="900.0" prefWidth="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <items>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <SplitPane dividerPositions="0.8161434977578476" layoutX="60.0" layoutY="372.0" orientation="VERTICAL" prefHeight="894.0" prefWidth="261.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <items>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                           <children>
+                              <ListView id="listViewExplorer" fx:id="listViewExplorer" layoutX="7.0" layoutY="125.0" prefHeight="724.0" prefWidth="259.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <padding>
+                                    <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                                 </padding>
+                              </ListView>
+                           </children>
+                        </AnchorPane>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                           <children>
+                              <Button id="buttonImportCSVData" fx:id="buttonImportCSVData" onAction="#onImportCSVData" layoutX="39.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="182.0" text="Import CSV Data" />
+                              <Button id="buttonSettings" fx:id="buttonSettings" onAction="#onSettings" layoutX="39.0" layoutY="55.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="182.0" text="Settings" />
+                              <Button id="buttonSynch" fx:id="buttonSynch" layoutX="39.0" layoutY="96.0" mnemonicParsing="false" onAction="#onSync" prefHeight="25.0" prefWidth="182.0" text="Synch" />
+                           </children>
+                        </AnchorPane>
+                    </items>
+                  </SplitPane>
+               </children>
+            </AnchorPane>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <SplitPane dividerPositions="0.06278026905829596" layoutX="236.0" layoutY="200.0" orientation="VERTICAL" prefHeight="894.0" prefWidth="725.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <items>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                           <children>
+                              <Button id="buttonExportToCSV" fx:id="buttonExportToCSV" layoutX="600.0" layoutY="14.0" mnemonicParsing="false" text="Export to CSV" />
+                              <Button id="buttonPlot" fx:id="buttonPlot" layoutX="518.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="58.0" text="Plot" />
+                              <Label id="labelDataTitle" fx:id="labelDataTitle" layoutX="13.0" layoutY="9.0" prefHeight="34.0" prefWidth="479.0" />
+                           </children>
+                        </AnchorPane>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                           <children>
+                              <TilePane id="tilePaneSummary" fx:id="tilePaneSummary" layoutX="14.0" layoutY="14.0" prefHeight="103.0" prefWidth="693.0" />
+                              <TableView fx:id="tableData" layoutX="14.0" layoutY="126.0" prefHeight="698.0" prefWidth="693.0">
+                                <columns>
+                                  <TableColumn prefWidth="78.0" text="C1" />
+                                  <TableColumn prefWidth="72.0" text="C2" />
+                                </columns>
+                              </TableView>
+                           </children>
+                        </AnchorPane>
+                    </items>
+                  </SplitPane>
+               </children>
+            </AnchorPane>
+        </items>
+      </SplitPane>
+   </children>
+</AnchorPane>

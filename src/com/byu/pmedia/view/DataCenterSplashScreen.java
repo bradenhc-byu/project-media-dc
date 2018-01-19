@@ -50,15 +50,12 @@ public class DataCenterSplashScreen {
             splash.close();
             System.exit(ErrorCode.DB_CONNECT_FAILURE);
         }
-        renderSplashFrame(g, 440, "Loading data and initializing model...");
-        splash.update();
-        StillFaceModel.getInstance().initialize(initializer.getDAO());
+        //renderSplashFrame(g, 440, "Loading data and initializing model...");
+        //splash.update();
+        //StillFaceModel.getInstance().initialize(initializer.getDAO());
         renderSplashFrame(g, 600, "Loading GUI Components...");
         splash.update();
         fakeWait(900);
-        renderSplashFrame(g, 638, "Loading GUI Components...");
-        splash.update();
-        fakeWait(500);
         splash.close();
     }
 

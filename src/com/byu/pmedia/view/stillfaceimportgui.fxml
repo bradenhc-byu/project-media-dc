@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="333.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.byu.pmedia.controller.ImportController">
+   <children>
+      <Button id="buttonChooseFile" fx:id="buttonChooseFile" layoutX="14.0" layoutY="34.0" mnemonicParsing="false" onAction="#onChooseFile" text="Choose FIle" />
+      <TextField id="textFieldChosenFile" fx:id="textFieldChosenFile" editable="false" layoutX="129.0" layoutY="34.0" prefHeight="25.0" prefWidth="446.0" />
+      <Label id="labelYear" fx:id="labelYear" layoutX="14.0" layoutY="72.0" prefHeight="43.0" prefWidth="113.0" text="Wave (year):" />
+      <Label id="labelFamilyID" fx:id="labelFamilyID" layoutX="14.0" layoutY="115.0" prefHeight="43.0" prefWidth="113.0" text="Family ID:" />
+      <Label id="labelParticipantID" fx:id="labelParticipantID" layoutX="14.0" layoutY="158.0" prefHeight="43.0" prefWidth="113.0" text="Participant ID:" />
+      <TextField id="textFieldYear" fx:id="textFieldYear" layoutX="129.0" layoutY="81.0" prefHeight="25.0" prefWidth="446.0" />
+      <TextField id="textFieldFamilyID" fx:id="textFieldFamilyID" layoutX="129.0" layoutY="124.0" prefHeight="25.0" prefWidth="446.0" />
+      <TextField id="textFieldParticipantID" fx:id="textFieldParticipantID" layoutX="129.0" layoutY="167.0" prefHeight="25.0" prefWidth="446.0" />
+      <Label id="labelTag" fx:id="labelTag" layoutX="14.0" layoutY="201.0" prefHeight="43.0" prefWidth="113.0" text="Tag:" />
+      <ChoiceBox id="choiceBoxTag" fx:id="choiceBoxTag" layoutX="129.0" layoutY="210.0" prefHeight="25.0" prefWidth="446.0" />
+      <Button id="buttonImport" fx:id="buttonImport" layoutX="513.0" layoutY="294.0" mnemonicParsing="false" onAction="#onImport" text="Import" />
+      <Button id="buttonCancel" fx:id="buttonCancel" layoutX="426.0" layoutY="294.0" mnemonicParsing="false" onAction="#onCancel" text="Cancel" />
+      <Label id="labelAlias" fx:id="labelAlias" layoutX="14.0" layoutY="244.0" prefHeight="43.0" prefWidth="113.0" text="Alias (optional):" />
+      <TextField id="textFieldAlias" fx:id="textFieldAlias" layoutX="129.0" layoutY="253.0" prefHeight="25.0" prefWidth="446.0" />
+      <Label id="labelMessage" fx:id="labelMessage" layoutX="14.0" layoutY="299.0" prefHeight="15.0" prefWidth="273.0" />
+   </children>
+</AnchorPane>
