@@ -6,6 +6,10 @@ import com.byu.pmedia.database.StillFaceDatabaseInitializer;
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceModel;
 import com.byu.pmedia.util.ErrorCode;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -45,15 +49,16 @@ public class DataCenterSplashScreen {
         StillFaceDatabaseInitializer initializer = new StillFaceDatabaseInitializer();
         boolean success = initializer.initialize(mode);
         if(!success){
-            JOptionPane.showMessageDialog(null, "We encountered an error while trying to establish the" +
-                    "database connection. Please check your connection and database settings and try again.");
+            String message = "We encountered an error while trying to establish the database connection. " +
+                    "Please check your connection and database settings and try again.";
+            new StillFaceErrorNotification(message).show();
             splash.close();
             System.exit(ErrorCode.DB_CONNECT_FAILURE);
         }
-        //renderSplashFrame(g, 440, "Loading data and initializing model...");
-        //splash.update();
-        //StillFaceModel.getInstance().initialize(initializer.getDAO());
-        renderSplashFrame(g, 600, "Loading GUI Components...");
+        renderSplashFrame(g, 440, "Loading data and initializing model...");
+        splash.update();
+        StillFaceModel.getInstance().initialize(initializer.getDAO());
+        renderSplashFrame(g, 580, "Loading GUI Components...");
         splash.update();
         fakeWait(900);
         splash.close();

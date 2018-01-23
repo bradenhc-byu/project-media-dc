@@ -1,13 +1,15 @@
 package com.byu.pmedia.model;
 
 import com.googlecode.cqengine.attribute.Attribute;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 import static com.googlecode.cqengine.query.QueryFactory.attribute;
 
 public class StillFaceTag {
 
-    private int tagID = 0;
-    private String tagValue;
+    private SimpleIntegerProperty tagID = new SimpleIntegerProperty();
+    private SimpleStringProperty tagValue = new SimpleStringProperty();
 
     /**
      * The following variables are defined for use with the CQEngine IndexedCollections. This allows us to
@@ -24,24 +26,40 @@ public class StillFaceTag {
     }
 
     public StillFaceTag(int tagID, String tagValue){
-        this.tagID = tagID;
+        this.tagID.set(tagID);
         this.setTagValue(tagValue);
     }
 
     public void setTagValue(String tagValue) {
-        this.tagValue = tagValue;
+        this.tagValue.set(tagValue);
     }
 
     public int getTagID() {
-        return tagID;
+        return tagID.get();
     }
 
     public String getTagValue() {
-        return tagValue;
+        return tagValue.get();
     }
 
     @Override
     public String toString(){
         return this.getTagValue();
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(!o.getClass().equals(StillFaceTag.class)) return false;
+        StillFaceTag t = (StillFaceTag)o;
+        if(!t.getTagValue().equals(this.getTagValue())
+                || t.getTagID() != this.getTagID()){
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode(){
+        return tagValue.get().hashCode();
     }
 }

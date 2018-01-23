@@ -2,17 +2,17 @@ package com.byu.pmedia.database;
 
 import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.model.StillFaceCode;
-import com.byu.pmedia.model.StillFaceCodeData;
-import com.byu.pmedia.model.StillFaceImportData;
-import com.byu.pmedia.model.StillFaceTag;
+import com.byu.pmedia.model.*;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.hash.HashIndex;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.index.radix.RadixTreeIndex;
+import com.googlecode.cqengine.query.Query;
 
 import java.sql.*;
+
+import static com.googlecode.cqengine.query.QueryFactory.*;
 
 public class StillFaceDAO {
 
@@ -138,6 +138,9 @@ public class StillFaceDAO {
                 int tid = resultSet.getInt("tid");
                 String tValue = resultSet.getString("value");
                 String alias = resultSet.getString("alias");
+                if(alias.equals("")){
+                    alias = "none";
+                }
                 Date date = resultSet.getDate("date");
                 importDataCollection.add(new StillFaceImportData(iid, filename, year, familyID, participantNumber,
                         new StillFaceTag(tid, tValue), alias, date));
@@ -210,6 +213,25 @@ public class StillFaceDAO {
      * @return The newly generated key if successful. -1 otherwise.
      */
     public int insertCodeData(StillFaceCodeData data){
+        // Verify the code (cid) is valid. If not create a new entry
+        boolean exists = false;
+        Query<StillFaceCode> codeQuery = equal(StillFaceCode.NAME, data.getCode().getName());
+        for(StillFaceCode code : StillFaceModel.getInstance().getCodeCollection().retrieve(codeQuery)){
+            exists = true;
+            data.getCode().setCodeID(code.getCodeID());
+            break;
+        }
+        if(!exists){
+            // Insert the new value into the DB
+            int key = insertNewCode(data.getCode());
+            if(key < 0){
+                PMLogger.getInstance().error("Failed to create new code entry for unknown code");
+                return -1;
+            }
+            StillFaceModel.getInstance().refreshCodes();
+            data.getCode().setCodeID(key);
+        }
+
         // Create the query
         String query = this.queryBuilder.buildInsertCodeData(data);
 
@@ -590,8 +612,8 @@ public class StillFaceDAO {
         // Initialize all the queries
         String createImportTableQuery = this.queryBuilder.buildCreateSFImportTable(mode);
         String createDataTableQuery = this.queryBuilder.buildCreateSFDataTable(mode);
-        String createCodeTableQuery = this.queryBuilder.buildCreateSFCodesTable(mode);
-        String createTagTableQuery = this.queryBuilder.buildCreateSFTagsTable(mode);
+        //String createCodeTableQuery = this.queryBuilder.buildCreateSFCodesTable(mode);
+        //String createTagTableQuery = this.queryBuilder.buildCreateSFTagsTable(mode);
 
         // Execute the queries
         try{
@@ -599,8 +621,8 @@ public class StillFaceDAO {
             Statement statement = this.databaseConnection.getConnection().createStatement();
             statement.executeUpdate(createImportTableQuery);
             statement.executeUpdate(createDataTableQuery);
-            statement.executeUpdate(createCodeTableQuery);
-            statement.executeUpdate(createTagTableQuery);
+            //statement.executeUpdate(createCodeTableQuery);
+            //statement.executeUpdate(createTagTableQuery);
             this.closeConnection();
             return true;
         }
@@ -614,8 +636,8 @@ public class StillFaceDAO {
         // Initialize all the queries
         String dropImportTableQuery = this.queryBuilder.buildDropSFImportTable();
         String dropDataTableQuery = this.queryBuilder.buildDropSFDataTable();
-        String dropCodeTableQuery = this.queryBuilder.buildDropSFCodesTable();
-        String dropTagTableQuery = this.queryBuilder.buildDropSFTagsTable();
+        //String dropCodeTableQuery = this.queryBuilder.buildDropSFCodesTable();
+        //String dropTagTableQuery = this.queryBuilder.buildDropSFTagsTable();
 
         // Execute the queries
         try{
@@ -623,8 +645,8 @@ public class StillFaceDAO {
             Statement statement = this.databaseConnection.getConnection().createStatement();
             statement.executeUpdate(dropImportTableQuery);
             statement.executeUpdate(dropDataTableQuery);
-            statement.executeUpdate(dropCodeTableQuery);
-            statement.executeUpdate(dropTagTableQuery);
+            //statement.executeUpdate(dropCodeTableQuery);
+            //statement.executeUpdate(dropTagTableQuery);
             this.closeConnection();
             return true;
         }

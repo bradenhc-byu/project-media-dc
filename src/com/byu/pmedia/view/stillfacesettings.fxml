@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<TabPane fx:id="tabPaneSettings" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="414.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.byu.pmedia.controller.SettingsController">
+  <tabs>
+    <Tab fx:id="tabGeneral" text="General Settings">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="389.0" prefWidth="600.0">
+            <children>
+                <TextField fx:id="textFieldDBHost" layoutX="138.0" layoutY="64.0" prefHeight="25.0" prefWidth="150.0" />
+                <Label fx:id="labelDBMode" layoutX="15.0" layoutY="30.0" text="Database Mode" />
+                <Label fx:id="labelDBHost" layoutX="15.0" layoutY="69.0" text="Database Host" />
+                <Label fx:id="labelDBPort" layoutX="310.0" layoutY="69.0" text="Database Port" />
+                <TextField fx:id="textFieldDBPort" layoutX="415.0" layoutY="64.0" />
+                <ChoiceBox fx:id="choiceBoxDBMode" layoutX="136.0" layoutY="25.0" prefWidth="150.0" />
+                <Label fx:id="labelDBName" layoutX="15.0" layoutY="111.0" text="Database Name" />
+                <TextField fx:id="textFieldDBName" layoutX="139.0" layoutY="106.0" prefHeight="25.0" prefWidth="443.0" />
+                <TextField fx:id="textFieldDBUsername" layoutX="139.0" layoutY="151.0" prefHeight="25.0" prefWidth="233.0" />
+                <Label fx:id="labelDBUsername" layoutX="15.0" layoutY="156.0" text="DB Username" />
+                <Label fx:id="labelDBPassword" layoutX="15.0" layoutY="205.0" text="DB Password" />
+                <Button fx:id="buttonSave" layoutX="525.0" layoutY="338.0" mnemonicParsing="false" onAction="#onSaveAction" prefHeight="25.0" prefWidth="61.0" text="Save" />
+                <Button fx:id="buttonCancel" layoutX="451.0" layoutY="338.0" mnemonicParsing="false" onAction="#onCancelAction" text="Cancel" />
+                <Label fx:id="labelDataCache" layoutX="15.0" layoutY="250.0" text="Data Caching" />
+                <PasswordField fx:id="textFieldDBPassword" layoutX="139.0" layoutY="200.0" prefHeight="25.0" prefWidth="233.0" />
+                <CheckBox fx:id="checkboxDataCache" layoutX="139.0" layoutY="249.0" mnemonicParsing="false" text="Enabled" />
+            </children>
+        </AnchorPane>
+      </content>
+    </Tab>
+    <Tab fx:id="tabCodes" text="Still Face Codes">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <TableView id="tableViewCodes" fx:id="tableViewCodes" editable="true" layoutX="14.0" layoutY="14.0" prefHeight="354.0" prefWidth="484.0" />
+                  <Button fx:id="buttonAddCode" layoutX="516.0" layoutY="342.0" mnemonicParsing="false" onAction="#onAddCode" prefHeight="25.0" prefWidth="70.0" text="Add" />
+                  <Button id="buttonDeleteCode" fx:id="buttonDeleteCode" onAction="#onDeleteCode" layoutX="516.0" layoutY="303.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Del" />
+               </children></AnchorPane>
+      </content>
+    </Tab>
+      <Tab fx:id="tabTags" text="Still Face Tags">
+         <content>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <TableView id="tableViewTags" fx:id="tableViewTags" layoutX="14.0" layoutY="14.0" prefHeight="354.0" prefWidth="484.0" />
+                  <Button id="buttonAddTag" fx:id="buttonAddTag" layoutX="516.0" layoutY="342.0" mnemonicParsing="false" onAction="#onAddTag" prefHeight="25.0" prefWidth="70.0" text="Add" />
+                  <Button id="buttonDeleteTag" fx:id="buttonDeleteTag" onAction="#onDeleteTag" layoutX="516.0" layoutY="303.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Del" />
+               </children></AnchorPane>
+         </content>
+      </Tab>
+  </tabs>
+</TabPane>

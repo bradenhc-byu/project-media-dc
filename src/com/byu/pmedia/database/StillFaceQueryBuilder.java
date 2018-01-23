@@ -27,8 +27,9 @@ public class StillFaceQueryBuilder {
         else{
             importIDCondition = "iid = " + importID;
         }
-        return "SELECT * " +
-                "FROM " + IMPORT_TABLE_NAME + " " +
+        return "SELECT i.*, t.value " +
+                "FROM " + IMPORT_TABLE_NAME + " i " +
+                "INNER JOIN " + TAGS_TABLE_NAME + " t ON t.tid = i.tid " +
                 "WHERE " + importIDCondition;
     }
 

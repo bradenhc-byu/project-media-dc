@@ -18,8 +18,9 @@
       <ChoiceBox id="choiceBoxTag" fx:id="choiceBoxTag" layoutX="129.0" layoutY="210.0" prefHeight="25.0" prefWidth="446.0" />
       <Button id="buttonImport" fx:id="buttonImport" layoutX="513.0" layoutY="294.0" mnemonicParsing="false" onAction="#onImport" text="Import" />
       <Button id="buttonCancel" fx:id="buttonCancel" layoutX="426.0" layoutY="294.0" mnemonicParsing="false" onAction="#onCancel" text="Cancel" />
-      <Label id="labelAlias" fx:id="labelAlias" layoutX="14.0" layoutY="244.0" prefHeight="43.0" prefWidth="113.0" text="Alias (optional):" />
+      <Label id="labelAlias" fx:id="labelAlias" layoutX="14.0" layoutY="244.0" prefHeight="43.0" prefWidth="113.0" text="Alias:" />
       <TextField id="textFieldAlias" fx:id="textFieldAlias" layoutX="129.0" layoutY="253.0" prefHeight="25.0" prefWidth="446.0" />
-      <Label id="labelMessage" fx:id="labelMessage" layoutX="14.0" layoutY="299.0" prefHeight="15.0" prefWidth="273.0" />
+      <Label id="labelMessage" fx:id="labelMessage" layoutX="51.0" layoutY="299.0" prefHeight="15.0" prefWidth="273.0" />
+      <ProgressIndicator id="progressIndicator" fx:id="progressIndicator" layoutX="14.0" layoutY="291.0" prefHeight="31.0" prefWidth="25.0" />
    </children>
 </AnchorPane>

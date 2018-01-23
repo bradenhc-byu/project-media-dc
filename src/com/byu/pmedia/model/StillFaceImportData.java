@@ -112,4 +112,9 @@ public class StillFaceImportData {
     public void setTag(StillFaceTag tag) {
         this.tag = tag;
     }
+
+    @Override
+    public String toString(){
+        return String.format("(%s): %s [%s]", alias, filename, date.toString());
+    }
 }

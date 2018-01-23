@@ -2,10 +2,7 @@ package com.byu.pmedia.config;
 
 import com.byu.pmedia.log.PMLogger;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +10,7 @@ public class StillFaceConfig {
 
     private String configPath = "." + File.separator + "etc" + File.separator;
     private Map<String, String> configuration = new HashMap<>();
+    private String filename;
 
     private static StillFaceConfig singleton;
 
@@ -25,6 +23,7 @@ public class StillFaceConfig {
 
     public boolean initialize(String filename){
         try{
+            this.filename = filename;
             BufferedReader br = new BufferedReader(new FileReader(this.configPath + filename));
             String line;
             while((line = br.readLine()) != null){
@@ -34,10 +33,38 @@ public class StillFaceConfig {
                 String value = line.substring(index+1).trim();
                 this.configuration.put(key, value);
             }
+            br.close();
             return true;
         }
         catch(IOException e){
             PMLogger.getInstance().error("Unable to initialize configuration: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean save(){
+        PMLogger.getInstance().info("Saving configuration to file");
+        if(this.filename == null || this.filename.equals("")){
+            PMLogger.getInstance().warn("Failed to save configuration. Invalid filename: " + filename);
+            return false;
+        }
+        StringBuilder line = new StringBuilder();
+        try{
+            BufferedWriter bw = new BufferedWriter(new FileWriter(this.configPath + this.filename));
+            for(String key : configuration.keySet()){
+                line.append(key).append(": ").append(configuration.get(key));
+                bw.write(line.toString());
+                bw.newLine();
+                line.setLength(0);
+                line.trimToSize();
+            }
+            bw.close();
+            PMLogger.getInstance().info("Configuration successfully saved");
+            return true;
+
+        }
+        catch(IOException e){
+            PMLogger.getInstance().error("Unable to save configuration: " + e.getMessage());
             return false;
         }
     }
@@ -65,11 +92,14 @@ public class StillFaceConfig {
 
     public boolean getAsBoolean(String key){
         String value = this.configuration.get(key);
-        try {
-            return value.equals("true") || Integer.parseInt(value) > 0;
+        if(value.equals("true")){
+            return true;
         }
-        catch(NumberFormatException e){
-            PMLogger.getInstance().warn("Config request format error: " + e.getMessage());
+        else if(value.equals("false")){
+            return false;
+        }
+        else{
+            PMLogger.getInstance().error("Unable to get config boolean value: " + value);
             return false;
         }
     }

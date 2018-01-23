@@ -1,13 +1,15 @@
 package com.byu.pmedia.model;
 
 import com.googlecode.cqengine.attribute.Attribute;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 import static com.googlecode.cqengine.query.QueryFactory.attribute;
 
 public class StillFaceCode {
 
-    private String name;
-    private int codeID = 0;
+    private SimpleStringProperty name = new SimpleStringProperty();
+    private SimpleIntegerProperty codeID = new SimpleIntegerProperty();
 
     /**
      * The following variables are defined for use with the CQEngine IndexedCollections. This allows us to
@@ -24,17 +26,40 @@ public class StillFaceCode {
     }
 
     public StillFaceCode(int codeID, String name){
-        this.codeID = codeID;
+        this.codeID.set(codeID);
         this.setName(name);
     }
 
     public void setName(String name){
-        this.name = name;
+        this.name.set(name);
     }
 
     public String getName(){
-        return this.name;
+        return this.name.get();
     }
 
-    public int getCodeID() { return this.codeID; }
+    public void setCodeID(int codeID) { this.codeID.set(codeID); }
+
+    public int getCodeID() { return this.codeID.get(); }
+
+    @Override
+    public String toString(){
+        return name.get();
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o == null || !o.getClass().equals(StillFaceCode.class)) return false;
+        StillFaceCode c = (StillFaceCode)o;
+        if(!c.getName().equals(this.getName())
+                || c.getCodeID() != this.getCodeID()){
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode(){
+        return name.get().hashCode();
+    }
 }
