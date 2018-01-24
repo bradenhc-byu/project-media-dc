@@ -49,7 +49,7 @@ public class StillFaceTag {
 
     @Override
     public boolean equals(Object o){
-        if(!o.getClass().equals(StillFaceTag.class)) return false;
+        if(o == null || !o.getClass().equals(StillFaceTag.class)) return false;
         StillFaceTag t = (StillFaceTag)o;
         if(!t.getTagValue().equals(this.getTagValue())
                 || t.getTagID() != this.getTagID()){

@@ -5,7 +5,6 @@ import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.*;
 import com.byu.pmedia.parser.CodedVideoCSVParser;
 import com.byu.pmedia.view.StillFaceWarningNotification;
-import com.googlecode.cqengine.query.Query;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
@@ -19,12 +18,9 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.net.URL;
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.googlecode.cqengine.query.QueryFactory.*;
 
 
 
@@ -64,12 +60,7 @@ public class ImportController implements Initializable {
         if(this.chosenFile != null){
             this.textFieldChosenFile.setText(chosenFile.getName());
             extractFileNameData(this.chosenFile.getName());
-            Query<StillFaceTag> query = not(equal(StillFaceTag.TAG_ID, 0));
-            ArrayList<StillFaceTag> choiceBoxValues = new ArrayList<>();
-            for(StillFaceTag tag : StillFaceModel.getInstance().getTagCollection().retrieve(query)){
-                choiceBoxValues.add(tag);
-            }
-            this.choiceBoxTag.setItems(FXCollections.observableArrayList(choiceBoxValues));
+            this.choiceBoxTag.setItems(FXCollections.observableArrayList(StillFaceModel.getTagList()));
             this.buttonImport.setDisable(false);
 
         }
@@ -156,7 +147,7 @@ public class ImportController implements Initializable {
                         }
                     }
                     StillFaceModel.getInstance().refreshImportData();
-                    StillFaceModel.getInstance().refreshVideoData();
+                    StillFaceModel.getInstance().refreshCodeData();
                 }
                 else{
                     PMLogger.getInstance().error("Unable to insert data into database");

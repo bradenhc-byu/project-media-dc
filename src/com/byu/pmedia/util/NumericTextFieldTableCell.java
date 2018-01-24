@@ -1,4 +1,4 @@
-package com.byu.pmedia.controller;
+package com.byu.pmedia.util;
 
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;

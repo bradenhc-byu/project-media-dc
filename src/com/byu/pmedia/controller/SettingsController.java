@@ -4,14 +4,12 @@ import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.database.DatabaseMode;
 import com.byu.pmedia.database.StillFaceDAO;
 import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.model.StillFaceCode;
-import com.byu.pmedia.model.StillFaceCodeData;
-import com.byu.pmedia.model.StillFaceModel;
-import com.byu.pmedia.model.StillFaceTag;
+import com.byu.pmedia.model.*;
 import com.byu.pmedia.view.ConfirmAction;
 import com.byu.pmedia.view.StillFaceConfirmNotification;
 import com.byu.pmedia.view.StillFaceErrorNotification;
 import com.googlecode.cqengine.query.Query;
+import com.googlecode.cqengine.resultset.ResultSet;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -23,7 +21,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
-import jdk.nashorn.internal.runtime.options.Option;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -294,11 +291,12 @@ public class SettingsController implements Initializable {
 
     @FXML
     private void onDeleteCode(ActionEvent actionEvent) {
-        StillFaceCode code = (StillFaceCode)tableViewCodes.getSelectionModel().getSelectedItem();
+        StillFaceCode codeToDelete = (StillFaceCode)tableViewCodes.getSelectionModel().getSelectedItem();
         // If there are data entries that have this code, make the user select another code to replace them with
-        Query<StillFaceCodeData> dataQuery = equal(StillFaceCodeData.CODE, code);
-        if(StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery).size() > 0){
-            Query<StillFaceCode> codeQuery = not(equal(StillFaceCode.CODE_ID, code.getCodeID()));
+        Query<StillFaceCodeData> dataQuery = equal(StillFaceCodeData.CODE, codeToDelete);
+        ResultSet<StillFaceCodeData> resultCodeData = StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery);
+        if(resultCodeData.size() > 0){
+            Query<StillFaceCode> codeQuery = not(equal(StillFaceCode.CODE_ID, codeToDelete.getCodeID()));
             List<StillFaceCode> codes = new ArrayList<>();
             for(StillFaceCode c : StillFaceModel.getInstance().getCodeCollection().retrieve(codeQuery,
                     queryOptions(orderBy(descending(StillFaceCode.NAME))))){
@@ -308,38 +306,73 @@ public class SettingsController implements Initializable {
             dialog.setTitle("Replace Codes");
             dialog.setHeaderText("Attempt to delete a code that is currently in use");
             dialog.setContentText("Some data in the database uses the code you are trying to delete. Please select" +
-                    " a code to use in place of " + code.getName());
+                    " a code to use in place of '" + codeToDelete.getName() + "'");
             dialog.setWidth(200);
             Optional<StillFaceCode> result = dialog.showAndWait();
-            result.ifPresent(selected -> {
-
+            result.ifPresent(replacementCode -> {
+                // Update all the code entries
+                dao.lockConnection();
+                for(StillFaceCodeData dataEntry : resultCodeData){
+                    dataEntry.setCode(replacementCode);
+                    dao.updateCodeData(dataEntry);
+                }
+                dao.unlockConnection();
+                StillFaceModel.getInstance().refreshCodeData();
             });
         }
+        // Delete the old code
+        dao.deleteExistingCode(codeToDelete);
+        StillFaceModel.getInstance().refreshCodes();
+        updateCodes();
+        buttonDeleteCode.setDisable(true);
     }
 
     @FXML
     private void onDeleteTag(ActionEvent actionEvent) {
-        StillFaceTag tag = (StillFaceTag)tableViewTags.getSelectionModel().getSelectedItem();
-        // If there are improts that have this tag, make the user select another tag to replace it with
+        // Get the selected value
+        StillFaceTag tagToDelete = (StillFaceTag) tableViewTags.getSelectionModel().getSelectedItem();
+
+        // If there are import entries that have this tag, make the user select another code to replace them with
+        Query<StillFaceImportData> importQuery = equal(StillFaceImportData.TAG, tagToDelete);
+        ResultSet<StillFaceImportData> resultImportData =
+                StillFaceModel.getInstance().getImportDataCollection().retrieve(importQuery);
+        if(resultImportData.size() > 0){
+            Query<StillFaceTag> tagQuery = not(equal(StillFaceTag.TAG_ID, tagToDelete.getTagID()));
+            List<StillFaceTag> tags = new ArrayList<>();
+            for(StillFaceTag t : StillFaceModel.getInstance().getTagCollection().retrieve(tagQuery,
+                    queryOptions(orderBy(descending(StillFaceTag.TAG_VALUE))))){
+                tags.add(t);
+            }
+            ChoiceDialog<StillFaceTag> dialog = new ChoiceDialog<>(tags.get(0), tags);
+            dialog.setTitle("Replace Tag");
+            dialog.setHeaderText("Attempt to delete a tag that is currently in use");
+            dialog.setContentText("Some imports in the database use the tag you are trying to delete. Please select" +
+                    " a tag to use in place of '" + tagToDelete.getTagValue() + "'");
+            dialog.setWidth(200);
+            Optional<StillFaceTag> result = dialog.showAndWait();
+            result.ifPresent(replacementTag -> {
+                // Update all the code entries
+                dao.lockConnection();
+                for(StillFaceImportData importEntry : resultImportData){
+                    importEntry.setTag(replacementTag);
+                    dao.updateImportData(importEntry);
+                }
+                dao.unlockConnection();
+                StillFaceModel.getInstance().refreshImportData();
+            });
+        }
+        // Delete the old code
+        dao.deleteExistingTag(tagToDelete);
+        StillFaceModel.getInstance().refreshTags();
+        updateTags();
+        buttonDeleteTag.setDisable(true);
     }
 
     private void updateCodes(){
-        List<StillFaceCode> codes = new ArrayList<>();
-        Query<StillFaceCode> codeQuery = not(equal(StillFaceCode.CODE_ID, 0));
-        for(StillFaceCode code : StillFaceModel.getInstance().getCodeCollection().retrieve(codeQuery,
-                queryOptions(orderBy(ascending(StillFaceCode.NAME))))){
-            codes.add(code);
-        }
-        tableViewCodes.setItems(FXCollections.observableArrayList(codes));
+        tableViewCodes.setItems(FXCollections.observableArrayList(StillFaceModel.getCodeList()));
     }
 
     private void updateTags(){
-        List<StillFaceTag> tags = new ArrayList<>();
-        Query<StillFaceTag> tagQuery = not(equal(StillFaceTag.TAG_ID, 0));
-        for(StillFaceTag tag : StillFaceModel.getInstance().getTagCollection().retrieve(tagQuery,
-                queryOptions(orderBy(ascending(StillFaceTag.TAG_VALUE))))){
-            tags.add(tag);
-        }
-        tableViewTags.setItems(FXCollections.observableArrayList(tags));
+        tableViewTags.setItems(FXCollections.observableArrayList(StillFaceModel.getTagList()));
     }
 }

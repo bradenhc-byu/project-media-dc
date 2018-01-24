@@ -6,6 +6,7 @@ import com.byu.pmedia.model.StillFaceCode;
 import com.byu.pmedia.model.StillFaceCodeData;
 import com.byu.pmedia.model.StillFaceImportData;
 import com.byu.pmedia.model.StillFaceModel;
+import com.byu.pmedia.util.NumericTextFieldTableCell;
 import com.byu.pmedia.view.ConfirmAction;
 import com.byu.pmedia.view.StillFaceConfirmNotification;
 import com.googlecode.cqengine.query.Query;
@@ -53,6 +54,8 @@ public class DataCenterController implements Initializable {
     @FXML private Label labelDataTitle;
     @FXML private TilePane tilePaneSummary;
     @FXML private TableView tableData;
+
+    // TODO: Initialize the table columns here, so that they can be accessed throughout the class
 
     private StillFaceDAO dao;
     private Map<Integer, StillFaceCodeData> editedDataMap = new HashMap<>();
@@ -128,13 +131,8 @@ public class DataCenterController implements Initializable {
         TableColumn codeCol = new TableColumn("Code");
         codeCol.prefWidthProperty().bind(tableData.widthProperty().multiply(0.20));
         codeCol.setCellValueFactory(new PropertyValueFactory<StillFaceCodeData, StillFaceCode>("code"));
-        Query<StillFaceCode> codeQuery = not(equal(StillFaceCode.CODE_ID, 0));
-        List<StillFaceCode> codes = new ArrayList<>();
-        for(StillFaceCode code : StillFaceModel.getInstance().getCodeCollection().retrieve(codeQuery,
-                queryOptions(descending(StillFaceCode.NAME)))){
-            codes.add(code);
-        }
-        codeCol.setCellFactory(ChoiceBoxTableCell.forTableColumn(FXCollections.observableArrayList(codes)));
+        ObservableList<StillFaceCode> observableCodeList = FXCollections.observableArrayList(StillFaceModel.getCodeList());
+        codeCol.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
         codeCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceCodeData, StillFaceCode>>() {
             @Override
             public void handle(TableColumn.CellEditEvent<StillFaceCodeData, StillFaceCode> cellEditEvent) {
@@ -210,6 +208,7 @@ public class DataCenterController implements Initializable {
             stage.setTitle("Data Center Settings");
             stage.setScene(scene);
             stage.showAndWait();
+            StillFaceModel.getInstance().refresh();
         }
         catch(IOException e){
             PMLogger.getInstance().error("Unable to open settings dialogue: " + e.getMessage());
@@ -235,15 +234,12 @@ public class DataCenterController implements Initializable {
         else {
             sync();
         }
-        if(editedDataMap.size() == 0) refresh();
+        if(editedDataMap.size() == 0) resetView();
     }
 
     private void sync(){
         PMLogger.getInstance().info("Synchronizing with database");
-        StillFaceModel.getInstance().refreshImportData();
-        StillFaceModel.getInstance().refreshVideoData();
-        StillFaceModel.getInstance().refreshCodes();
-        StillFaceModel.getInstance().refreshTags();
+        StillFaceModel.getInstance().refresh();
         clearEdits();
     }
 
@@ -254,6 +250,7 @@ public class DataCenterController implements Initializable {
                 this.dao.updateCodeData(editedDataMap.get(key));
             }
             editedDataMap.clear();
+            StillFaceModel.getInstance().refreshCodeData();
         }
         buttonSaveChanges.setDisable(true);
     }
@@ -269,7 +266,7 @@ public class DataCenterController implements Initializable {
         listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
     }
 
-    private void refresh(){
+    private void resetView(){
         tableData.setItems(null);
         labelDataTitle.setText("");
         tilePaneSummary.getChildren().clear();
