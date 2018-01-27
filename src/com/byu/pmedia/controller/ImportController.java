@@ -1,15 +1,13 @@
 package com.byu.pmedia.controller;
 
 import com.byu.pmedia.database.StillFaceDAO;
-import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.*;
-import com.byu.pmedia.parser.CodedVideoCSVParser;
+import com.byu.pmedia.tasks.StillFaceImportTask;
+import com.byu.pmedia.tasks.StillFaceTaskCallback;
+import com.byu.pmedia.view.StillFaceErrorNotification;
 import com.byu.pmedia.view.StillFaceWarningNotification;
 import javafx.collections.FXCollections;
-import javafx.concurrent.Task;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
@@ -67,7 +65,7 @@ public class ImportController implements Initializable {
     }
 
     public void onCancel(ActionEvent actionEvent) {
-        ((Stage)(this.buttonCancel.getScene().getWindow())).close();
+        close();
     }
 
     public void onImport(ActionEvent actionEvent) {
@@ -115,61 +113,31 @@ public class ImportController implements Initializable {
     private void doImport(){
         buttonImport.setDisable(true);
         progressIndicator.setVisible(true);
-        Task importTask = new Task<Void>(){
+        StillFaceImport importData = new StillFaceImport(
+                chosenFile.getName(),
+                Integer.parseInt(textFieldYear.getText()),
+                Integer.parseInt(textFieldFamilyID.getText()),
+                Integer.parseInt(textFieldParticipantID.getText()),
+                (StillFaceTag)choiceBoxTag.getValue(),
+                textFieldAlias.getText(),
+                new Date(System.currentTimeMillis()));
+        labelMessage.setText("Importing data...");
+        new StillFaceImportTask(chosenFile, importData, new StillFaceTaskCallback() {
             @Override
-            protected Void call() throws Exception{
-                updateMessage("Preparing import...");
-                StillFaceImportData importData = new StillFaceImportData(
-                        chosenFile.getName(),
-                        Integer.parseInt(textFieldYear.getText()),
-                        Integer.parseInt(textFieldFamilyID.getText()),
-                        Integer.parseInt(textFieldParticipantID.getText()),
-                        (StillFaceTag)choiceBoxTag.getValue(),
-                        textFieldAlias.getText(),
-                        new Date(System.currentTimeMillis()));
-                updateMessage("Importing data...");
-                StillFaceVideoData videoData = new StillFaceVideoData();
-                new CodedVideoCSVParser().parseFromCSVIntoCodedVideoData(chosenFile.getAbsolutePath(), videoData);
-                dao.lockConnection();
-                int key = dao.insertImportData(importData);
-                if(key > 0){
-                    for(StillFaceCodeData data : videoData.getData()){
-                        data.setImportID(key);
-                        int dKey = dao.insertCodeData(data);
-                        if(dKey < 0){
-                            PMLogger.getInstance().error("Unable to insert code data");
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("Import Failed");
-                            alert.setContentText("Unable to insert imported data into the database. Check your connection and the log files and try again.");
-                            alert.showAndWait();
-                            dao.cleanImportData(key);
-                            break;
-                        }
-                    }
-                    StillFaceModel.getInstance().refreshImportData();
-                    StillFaceModel.getInstance().refreshCodeData();
-                }
-                else{
-                    PMLogger.getInstance().error("Unable to insert data into database");
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Import Failed");
-                    alert.setContentText("Unable to insert imported data into the database. Check your connection and the log files and try again.");
-                    alert.showAndWait();
-                }
-                dao.unlockConnection();
-                return null;
+            public void onSuccess() {
+                close();
             }
-        };
-        importTask.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
+
             @Override
-            public void handle(WorkerStateEvent workerStateEvent) {
-                ((Stage)(buttonImport.getScene().getWindow())).close();
+            public void onFail(Throwable exception) {
+                new StillFaceErrorNotification("An error occured while trying to import the data: " +
+                        exception.getMessage()
+                ).show();
             }
-        });
+        }).execute();
+    }
 
-        // Bind the progress
-        labelMessage.textProperty().bind(importTask.messageProperty());
-
-        new Thread(importTask).start();
+    private void close(){
+        ((Stage)(this.buttonCancel.getScene().getWindow())).close();
     }
 }

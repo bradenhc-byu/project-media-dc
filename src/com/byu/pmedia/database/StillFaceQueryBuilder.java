@@ -1,11 +1,9 @@
 package com.byu.pmedia.database;
 
 import com.byu.pmedia.model.StillFaceCode;
-import com.byu.pmedia.model.StillFaceCodeData;
-import com.byu.pmedia.model.StillFaceImportData;
+import com.byu.pmedia.model.StillFaceData;
+import com.byu.pmedia.model.StillFaceImport;
 import com.byu.pmedia.model.StillFaceTag;
-
-import java.sql.PreparedStatement;
 
 
 public class StillFaceQueryBuilder {
@@ -92,7 +90,7 @@ public class StillFaceQueryBuilder {
     // INSERT statements
     //
 
-    public String buildInsertImport(StillFaceImportData importData){
+    public String buildInsertImport(StillFaceImport importData){
         return "INSERT INTO " + IMPORT_TABLE_NAME + " " +
                 "(filename, syear, fid, pid, tid, alias, date) " +
                 "VALUES('" + importData.getFilename() + "', " + importData.getYear() + ", " +
@@ -101,7 +99,7 @@ public class StillFaceQueryBuilder {
                 importData.getDate().toString() + "')";
     }
 
-    public String buildInsertCodeData(StillFaceCodeData data){
+    public String buildInsertCodeData(StillFaceData data){
         return "INSERT INTO " + DATA_TABLE_NAME + " " +
                 "(iid, time, duration, cid, comment) " +
                 "VALUES(" + data.getImportID() + ", " + data.getTime() + ", " + data.getDuration() + ", " +
@@ -124,7 +122,7 @@ public class StillFaceQueryBuilder {
     // UPDATE statements
     //
 
-    public String buildUpdateImport(StillFaceImportData importData){
+    public String buildUpdateImport(StillFaceImport importData){
         return "UPDATE " + IMPORT_TABLE_NAME + " " +
                 "SET " +
                 "syear = " + importData.getYear() + ", " +
@@ -135,7 +133,7 @@ public class StillFaceQueryBuilder {
                 "WHERE iid = " + importData.getImportID();
     }
 
-    public String buildUpdateCodeData(StillFaceCodeData data){
+    public String buildUpdateCodeData(StillFaceData data){
         return "UPDATE " + DATA_TABLE_NAME + " " +
                 "SET " +
                 "time = " + data.getTime() + ", " +

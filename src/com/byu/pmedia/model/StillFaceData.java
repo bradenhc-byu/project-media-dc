@@ -7,7 +7,7 @@ import javafx.beans.property.SimpleStringProperty;
 
 import static com.googlecode.cqengine.query.QueryFactory.attribute;
 
-public class StillFaceCodeData {
+public class StillFaceData {
 
     /**
      * These variables are for the JavaFX Table object in the GUI. The table cells are populated using a CellFactory,
@@ -26,20 +26,20 @@ public class StillFaceCodeData {
      * create extremely fast indexing capabilities and cache data in memory for use. Data is only cached if
      * the model.cache configuration option is set to 'true'
      */
-    public static final Attribute<StillFaceCodeData, Integer> DATA_ID =
-            attribute("dataID", StillFaceCodeData::getDataID);
-    public static final Attribute<StillFaceCodeData, Integer> IMPORT_ID =
-            attribute("importID", StillFaceCodeData::getImportID);
-    public static final Attribute<StillFaceCodeData, Integer> TIME =
-            attribute("time", StillFaceCodeData::getTime);
-    public static final Attribute<StillFaceCodeData, Integer> DURATION =
-            attribute("duration", StillFaceCodeData::getDuration);
-    public static final Attribute<StillFaceCodeData, StillFaceCode> CODE =
-            attribute("code", StillFaceCodeData::getCode);
-    public static final Attribute<StillFaceCodeData, String> COMMENT =
-            attribute("comment", StillFaceCodeData::getComment);
+    public static final Attribute<StillFaceData, Integer> DATA_ID =
+            attribute("dataID", StillFaceData::getDataID);
+    public static final Attribute<StillFaceData, Integer> IMPORT_ID =
+            attribute("importID", StillFaceData::getImportID);
+    public static final Attribute<StillFaceData, Integer> TIME =
+            attribute("time", StillFaceData::getTime);
+    public static final Attribute<StillFaceData, Integer> DURATION =
+            attribute("duration", StillFaceData::getDuration);
+    public static final Attribute<StillFaceData, StillFaceCode> CODE =
+            attribute("code", StillFaceData::getCode);
+    public static final Attribute<StillFaceData, String> COMMENT =
+            attribute("comment", StillFaceData::getComment);
 
-    public StillFaceCodeData(int importID, int time, int duration, StillFaceCode code, String comment){
+    public StillFaceData(int importID, int time, int duration, StillFaceCode code, String comment){
         this.importID = new SimpleIntegerProperty(importID);
         this.setTime(time);
         this.setDuration(duration);
@@ -47,7 +47,7 @@ public class StillFaceCodeData {
         this.setComment(comment);
     }
 
-    public StillFaceCodeData(int dataID, int importID, int time, int duration, StillFaceCode code, String comment){
+    public StillFaceData(int dataID, int importID, int time, int duration, StillFaceCode code, String comment){
         this.dataID = new SimpleIntegerProperty(dataID);
         this.importID = new SimpleIntegerProperty(importID);
         this.setTime(time);

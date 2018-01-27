@@ -2,16 +2,16 @@ package com.byu.pmedia.parser;
 
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceCode;
-import com.byu.pmedia.model.StillFaceCodeData;
+import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceVideoData;
 
 import java.io.*;
 
-public class CodedVideoCSVParser {
+public class StillFaceCSVParser {
 
     private String delimeter;
 
-    public CodedVideoCSVParser(){
+    public StillFaceCSVParser(){
         this.delimeter = ",";
     }
 
@@ -37,7 +37,7 @@ public class CodedVideoCSVParser {
 
                 // Strip away the header contents from the CSV file (if it exists)
                 try{
-                    videoData.addCodeData(new StillFaceCodeData(0, Integer.parseInt(data[0]),
+                    videoData.addCodeData(new StillFaceData(0, Integer.parseInt(data[0]),
                             Integer.parseInt(data[1]),
                             new StillFaceCode(data[2]),
                             data[3]));
@@ -72,7 +72,7 @@ public class CodedVideoCSVParser {
 
             BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
 
-            for(StillFaceCodeData stamp : videoData.getData()){
+            for(StillFaceData stamp : videoData.getData()){
                 StringBuilder sb = new StringBuilder();
                 sb.append(stamp.getTime());
                 sb.append(this.delimeter);
@@ -87,7 +87,8 @@ public class CodedVideoCSVParser {
             }
 
             bw.close();
-
+            PMLogger.getInstance().debug("Serialization complete");
+            return true;
         }
         catch(FileNotFoundException e){
             PMLogger.getInstance().error("Could not write to file, file not found: " + filename);
@@ -97,10 +98,6 @@ public class CodedVideoCSVParser {
             PMLogger.getInstance().error("Caught IOException: " + e.getMessage());
             return false;
         }
-
-        PMLogger.getInstance().debug("Serialization complete");
-
-        return true;
     }
 
 }

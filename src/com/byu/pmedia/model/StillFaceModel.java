@@ -20,8 +20,8 @@ public class StillFaceModel {
                                             // and retrieving data from the model will not refer to the database server
     private boolean initialized = false;    // Flag to check if the model has been initialized
 
-    private IndexedCollection<StillFaceImportData> importDataCollection = new ConcurrentIndexedCollection<>();
-    private IndexedCollection<StillFaceCodeData> dataCollection = new ConcurrentIndexedCollection<>();
+    private IndexedCollection<StillFaceImport> importDataCollection = new ConcurrentIndexedCollection<>();
+    private IndexedCollection<StillFaceData> dataCollection = new ConcurrentIndexedCollection<>();
     private IndexedCollection<StillFaceCode> codeCollection = new ConcurrentIndexedCollection<>();
     private IndexedCollection<StillFaceTag> tagCollection = new ConcurrentIndexedCollection<>();
 
@@ -64,11 +64,11 @@ public class StillFaceModel {
         return cached;
     }
 
-    public IndexedCollection<StillFaceImportData> getImportDataCollection() {
+    public IndexedCollection<StillFaceImport> getImportDataCollection() {
         return importDataCollection;
     }
 
-    public IndexedCollection<StillFaceCodeData> getDataCollection() {
+    public IndexedCollection<StillFaceData> getDataCollection() {
         return dataCollection;
     }
 
@@ -86,7 +86,7 @@ public class StillFaceModel {
 
     public boolean refreshImportData(){
         if(this.initialized){
-            IndexedCollection<StillFaceImportData> tmpCollection = this.dao.getImportData(0);
+            IndexedCollection<StillFaceImport> tmpCollection = this.dao.getImportData(0);
             if(tmpCollection == null){
                 PMLogger.getInstance().warn("Failed to refresh import data");
                 return false;
@@ -99,7 +99,7 @@ public class StillFaceModel {
 
     public boolean refreshCodeData(){
         if(this.initialized && this.cached){
-            IndexedCollection<StillFaceCodeData> tmpCollection = this.dao.getCodeDataFromImport(0);
+            IndexedCollection<StillFaceData> tmpCollection = this.dao.getCodeDataFromImport(0);
             if(tmpCollection == null){
                 PMLogger.getInstance().warn("Failed to refresh coded video data data");
                 return false;

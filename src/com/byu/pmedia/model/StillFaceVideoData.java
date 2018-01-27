@@ -1,21 +1,27 @@
 package com.byu.pmedia.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class StillFaceVideoData {
 
-    ArrayList<StillFaceCodeData> data = new ArrayList<>();
+    List<StillFaceData> data = new ArrayList<>();
     private String delimiter;
+
+    public StillFaceVideoData(List<StillFaceData> data){
+        this.data = data;
+        this.delimiter = ",";
+    }
 
     public StillFaceVideoData(){
         this.delimiter = ",";
     }
 
-    public void addCodeData(StillFaceCodeData cs){
+    public void addCodeData(StillFaceData cs){
         this.data.add(cs);
     }
 
-    public ArrayList<StillFaceCodeData> getData(){
+    public List<StillFaceData> getData(){
         return this.data;
     }
 
@@ -26,7 +32,7 @@ public class StillFaceVideoData {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for(StillFaceCodeData stamp : this.data){
+        for(StillFaceData stamp : this.data){
             sb.append(stamp.getTime());
             sb.append(this.delimiter);
             sb.append(stamp.getDuration());

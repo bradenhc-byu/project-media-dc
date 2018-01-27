@@ -5,7 +5,7 @@ import java.sql.Date;
 
 import static com.googlecode.cqengine.query.QueryFactory.attribute;
 
-public class StillFaceImportData {
+public class StillFaceImport {
 
     private int importID = 0;
     private String filename;
@@ -21,25 +21,25 @@ public class StillFaceImportData {
      * create extremely fast indexing capabilities and cache data in memory for use. Data is only cached if
      * the model.cache configuration option is set to 'true'
      */
-    public static final Attribute<StillFaceImportData, Integer> IMPORT_ID =
-            attribute("importID", StillFaceImportData::getImportID);
-    public static final Attribute<StillFaceImportData, String> FILENAME =
-            attribute("filename", StillFaceImportData::getFilename);
-    public static final Attribute<StillFaceImportData, Integer> YEAR =
-            attribute("year", StillFaceImportData::getYear);
-    public static final Attribute<StillFaceImportData, Integer> FAMILY_ID =
-            attribute("familyID", StillFaceImportData::getFamilyID);
-    public static final Attribute<StillFaceImportData, Integer> PARTICIPANT_ID =
-            attribute("participantNumber", StillFaceImportData::getParticipantNumber);
-    public static final Attribute<StillFaceImportData, StillFaceTag> TAG =
-            attribute("tag", StillFaceImportData::getTag);
-    public static final Attribute<StillFaceImportData, String> ALIAS =
-            attribute("alias", StillFaceImportData::getAlias);
-    public static final Attribute<StillFaceImportData, Date> DATE =
-            attribute("date", StillFaceImportData::getDate);
+    public static final Attribute<StillFaceImport, Integer> IMPORT_ID =
+            attribute("importID", StillFaceImport::getImportID);
+    public static final Attribute<StillFaceImport, String> FILENAME =
+            attribute("filename", StillFaceImport::getFilename);
+    public static final Attribute<StillFaceImport, Integer> YEAR =
+            attribute("year", StillFaceImport::getYear);
+    public static final Attribute<StillFaceImport, Integer> FAMILY_ID =
+            attribute("familyID", StillFaceImport::getFamilyID);
+    public static final Attribute<StillFaceImport, Integer> PARTICIPANT_ID =
+            attribute("participantNumber", StillFaceImport::getParticipantNumber);
+    public static final Attribute<StillFaceImport, StillFaceTag> TAG =
+            attribute("tag", StillFaceImport::getTag);
+    public static final Attribute<StillFaceImport, String> ALIAS =
+            attribute("alias", StillFaceImport::getAlias);
+    public static final Attribute<StillFaceImport, Date> DATE =
+            attribute("date", StillFaceImport::getDate);
 
-    public StillFaceImportData(int importID, String filename, int year, int familyID, int participantNumber,
-                               StillFaceTag tag, String alias, Date date) {
+    public StillFaceImport(int importID, String filename, int year, int familyID, int participantNumber,
+                           StillFaceTag tag, String alias, Date date) {
         this.importID = importID;
         this.filename = filename;
         this.year = year;
@@ -50,8 +50,8 @@ public class StillFaceImportData {
         this.date = date;
     }
 
-    public StillFaceImportData(String filename, int year, int familyID, int participantNumber,
-                               StillFaceTag tag, String alias, Date date) {
+    public StillFaceImport(String filename, int year, int familyID, int participantNumber,
+                           StillFaceTag tag, String alias, Date date) {
         this.filename = filename;
         this.year = year;
         this.familyID = familyID;
@@ -115,6 +115,6 @@ public class StillFaceImportData {
 
     @Override
     public String toString(){
-        return String.format("(%s): %s [%s]", alias, filename, date.toString());
+        return String.format("(%s): %s", alias, filename);
     }
 }

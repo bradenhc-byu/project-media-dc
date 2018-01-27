@@ -76,7 +76,7 @@ public class StillFaceDAO {
      *
      * @return The generated key of the successfully inserted data if successful. Otherwise -1.
      */
-    public int insertImportData(StillFaceImportData data){
+    public int insertImportData(StillFaceImport data){
         // Create the query
         String query = this.queryBuilder.buildInsertImport(data);
 
@@ -107,20 +107,20 @@ public class StillFaceDAO {
      *
      * @return A map of StillFaceImportData objects with their respective import IDs as the key
      */
-    public IndexedCollection<StillFaceImportData> getImportData(int importID){
+    public IndexedCollection<StillFaceImport> getImportData(int importID){
         // Create the query
         String query = this.queryBuilder.buildSelectImportData(importID);
 
         // Initialize the map
-        IndexedCollection<StillFaceImportData> importDataCollection = new ConcurrentIndexedCollection<>();
-        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.IMPORT_ID));
-        importDataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceImportData.FILENAME));
-        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.YEAR));
-        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.FAMILY_ID));
-        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImportData.PARTICIPANT_ID));
-        importDataCollection.addIndex(HashIndex.onAttribute(StillFaceImportData.TAG));
-        importDataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceImportData.ALIAS));
-        importDataCollection.addIndex(HashIndex.onAttribute(StillFaceImportData.DATE));
+        IndexedCollection<StillFaceImport> importDataCollection = new ConcurrentIndexedCollection<>();
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImport.IMPORT_ID));
+        importDataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceImport.FILENAME));
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImport.YEAR));
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImport.FAMILY_ID));
+        importDataCollection.addIndex(NavigableIndex.onAttribute(StillFaceImport.PARTICIPANT_ID));
+        importDataCollection.addIndex(HashIndex.onAttribute(StillFaceImport.TAG));
+        importDataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceImport.ALIAS));
+        importDataCollection.addIndex(HashIndex.onAttribute(StillFaceImport.DATE));
 
         // Get the data
         try {
@@ -142,7 +142,7 @@ public class StillFaceDAO {
                     alias = "none";
                 }
                 Date date = resultSet.getDate("date");
-                importDataCollection.add(new StillFaceImportData(iid, filename, year, familyID, participantNumber,
+                importDataCollection.add(new StillFaceImport(iid, filename, year, familyID, participantNumber,
                         new StillFaceTag(tid, tValue), alias, date));
             }
             this.closeConnection();
@@ -163,7 +163,7 @@ public class StillFaceDAO {
      *
      * @return True if the update is successful. False otherwise.
      */
-    public boolean updateImportData(StillFaceImportData data){
+    public boolean updateImportData(StillFaceImport data){
         // Create the query
         String query = this.queryBuilder.buildUpdateImport(data);
 
@@ -212,7 +212,7 @@ public class StillFaceDAO {
      *
      * @return The newly generated key if successful. -1 otherwise.
      */
-    public int insertCodeData(StillFaceCodeData data){
+    public int insertCodeData(StillFaceData data){
         // Verify the code (cid) is valid. If not create a new entry
         boolean exists = false;
         Query<StillFaceCode> codeQuery = equal(StillFaceCode.NAME, data.getCode().getName());
@@ -264,18 +264,18 @@ public class StillFaceDAO {
      *
      * @return A map of integer data ID, StillFaceCodeData object pairs if the query succeeds. Null otherwise.
      */
-    public IndexedCollection<StillFaceCodeData> getCodeDataFromImport(int importID){
+    public IndexedCollection<StillFaceData> getCodeDataFromImport(int importID){
         // Create the query
         String query = this.queryBuilder.buildSelectCodeDataFromImport(importID);
 
         // Prepare an indexed collection of StillFaceCodeData
-        IndexedCollection<StillFaceCodeData> dataCollection = new ConcurrentIndexedCollection<>();
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DATA_ID));
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.IMPORT_ID));
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.TIME));
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DURATION));
-        dataCollection.addIndex(HashIndex.onAttribute(StillFaceCodeData.CODE));
-        dataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceCodeData.COMMENT));
+        IndexedCollection<StillFaceData> dataCollection = new ConcurrentIndexedCollection<>();
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.DATA_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.IMPORT_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.TIME));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.DURATION));
+        dataCollection.addIndex(HashIndex.onAttribute(StillFaceData.CODE));
+        dataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceData.COMMENT));
 
         // Execute the query
         try{
@@ -290,7 +290,7 @@ public class StillFaceDAO {
                 int codeID = resultSet.getInt("cid");
                 String comment = resultSet.getString("comment");
                 String codeName = resultSet.getString("name");
-                dataCollection.add(new StillFaceCodeData(dataID, iid, time, duration,
+                dataCollection.add(new StillFaceData(dataID, iid, time, duration,
                         new StillFaceCode(codeID, codeName), comment));
             }
             this.closeConnection();
@@ -311,18 +311,18 @@ public class StillFaceDAO {
      *
      * @return A Map of integer data ID, StillFaceCodeData object pairs if successful. Null otherwise.
      */
-    public IndexedCollection<StillFaceCodeData> getCodeDataFromFamilyID(int familyID){
+    public IndexedCollection<StillFaceData> getCodeDataFromFamilyID(int familyID){
         // Create the query
         String query = this.queryBuilder.buildSelectCodeDataFromFamilyID(familyID);
 
         // Prepare an indexed collection of StillFaceCodeData
-        IndexedCollection<StillFaceCodeData> dataCollection = new ConcurrentIndexedCollection<>();
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DATA_ID));
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.IMPORT_ID));
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.TIME));
-        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceCodeData.DURATION));
-        dataCollection.addIndex(HashIndex.onAttribute(StillFaceCodeData.CODE));
-        dataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceCodeData.COMMENT));
+        IndexedCollection<StillFaceData> dataCollection = new ConcurrentIndexedCollection<>();
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.DATA_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.IMPORT_ID));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.TIME));
+        dataCollection.addIndex(NavigableIndex.onAttribute(StillFaceData.DURATION));
+        dataCollection.addIndex(HashIndex.onAttribute(StillFaceData.CODE));
+        dataCollection.addIndex(RadixTreeIndex.onAttribute(StillFaceData.COMMENT));
 
         // Execute the query
         try{
@@ -337,7 +337,7 @@ public class StillFaceDAO {
                 int codeID = resultSet.getInt("cid");
                 String comment = resultSet.getString("comment");
                 String codeName = resultSet.getString("name");
-                dataCollection.add(new StillFaceCodeData(dataID, iid, time, duration,
+                dataCollection.add(new StillFaceData(dataID, iid, time, duration,
                         new StillFaceCode(codeID, codeName), comment));
             }
             this.closeConnection();
@@ -356,7 +356,7 @@ public class StillFaceDAO {
      *
      * @return True if the update is successful. False otherwise.
      */
-    public boolean updateCodeData(StillFaceCodeData data){
+    public boolean updateCodeData(StillFaceData data){
         // Create the query
         String query = this.queryBuilder.buildUpdateCodeData(data);
 

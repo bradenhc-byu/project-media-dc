@@ -254,7 +254,7 @@ public class SettingsController implements Initializable {
             StillFaceCode code = new StillFaceCode(name);
             int key = dao.insertNewCode(code);
             if(key < 0){
-                String message = "An error has occured in connecting with the database. We were unable to save the new" +
+                String message = "An error has occurred in connecting with the database. We were unable to save the new" +
                         "code.";
                 new StillFaceErrorNotification(message).show();
                 PMLogger.getInstance().error("Could not add code");
@@ -293,8 +293,8 @@ public class SettingsController implements Initializable {
     private void onDeleteCode(ActionEvent actionEvent) {
         StillFaceCode codeToDelete = (StillFaceCode)tableViewCodes.getSelectionModel().getSelectedItem();
         // If there are data entries that have this code, make the user select another code to replace them with
-        Query<StillFaceCodeData> dataQuery = equal(StillFaceCodeData.CODE, codeToDelete);
-        ResultSet<StillFaceCodeData> resultCodeData = StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery);
+        Query<StillFaceData> dataQuery = equal(StillFaceData.CODE, codeToDelete);
+        ResultSet<StillFaceData> resultCodeData = StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery);
         if(resultCodeData.size() > 0){
             Query<StillFaceCode> codeQuery = not(equal(StillFaceCode.CODE_ID, codeToDelete.getCodeID()));
             List<StillFaceCode> codes = new ArrayList<>();
@@ -312,7 +312,7 @@ public class SettingsController implements Initializable {
             result.ifPresent(replacementCode -> {
                 // Update all the code entries
                 dao.lockConnection();
-                for(StillFaceCodeData dataEntry : resultCodeData){
+                for(StillFaceData dataEntry : resultCodeData){
                     dataEntry.setCode(replacementCode);
                     dao.updateCodeData(dataEntry);
                 }
@@ -333,8 +333,8 @@ public class SettingsController implements Initializable {
         StillFaceTag tagToDelete = (StillFaceTag) tableViewTags.getSelectionModel().getSelectedItem();
 
         // If there are import entries that have this tag, make the user select another code to replace them with
-        Query<StillFaceImportData> importQuery = equal(StillFaceImportData.TAG, tagToDelete);
-        ResultSet<StillFaceImportData> resultImportData =
+        Query<StillFaceImport> importQuery = equal(StillFaceImport.TAG, tagToDelete);
+        ResultSet<StillFaceImport> resultImportData =
                 StillFaceModel.getInstance().getImportDataCollection().retrieve(importQuery);
         if(resultImportData.size() > 0){
             Query<StillFaceTag> tagQuery = not(equal(StillFaceTag.TAG_ID, tagToDelete.getTagID()));
@@ -353,7 +353,7 @@ public class SettingsController implements Initializable {
             result.ifPresent(replacementTag -> {
                 // Update all the code entries
                 dao.lockConnection();
-                for(StillFaceImportData importEntry : resultImportData){
+                for(StillFaceImport importEntry : resultImportData){
                     importEntry.setTag(replacementTag);
                     dao.updateImportData(importEntry);
                 }

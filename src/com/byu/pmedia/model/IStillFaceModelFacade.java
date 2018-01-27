@@ -4,19 +4,19 @@ import java.util.ArrayList;
 
 public interface IStillFaceModelFacade {
 
-    ArrayList<StillFaceImportData> getImportDataAsArrayList();
+    ArrayList<StillFaceImport> getImportDataAsArrayList();
 
-    ArrayList<StillFaceCodeData> getCodeDataAsArrayList();
+    ArrayList<StillFaceData> getCodeDataAsArrayList();
 
     ArrayList<StillFaceCode> getCodeAsArrayList();
 
     ArrayList<StillFaceTag> getTagAsArrayList();
 
-    StillFaceImportData getImportData(int importID);
+    StillFaceImport getImportData(int importID);
 
     StillFaceVideoData getVideoData(int importID);
 
-    StillFaceCodeData getCodeData(int dataID);
+    StillFaceData getCodeData(int dataID);
 
     StillFaceCode getCode(int codeID);
 

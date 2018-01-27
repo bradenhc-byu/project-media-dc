@@ -2,13 +2,15 @@ package com.byu.pmedia.controller;
 
 import com.byu.pmedia.database.StillFaceDAO;
 import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.model.StillFaceCode;
-import com.byu.pmedia.model.StillFaceCodeData;
-import com.byu.pmedia.model.StillFaceImportData;
-import com.byu.pmedia.model.StillFaceModel;
+import com.byu.pmedia.model.*;
+import com.byu.pmedia.tasks.StillFaceExportTask;
+import com.byu.pmedia.tasks.StillFaceSaveTask;
+import com.byu.pmedia.tasks.StillFaceSyncTask;
+import com.byu.pmedia.tasks.StillFaceTaskCallback;
 import com.byu.pmedia.util.NumericTextFieldTableCell;
 import com.byu.pmedia.view.ConfirmAction;
 import com.byu.pmedia.view.StillFaceConfirmNotification;
+import com.byu.pmedia.view.StillFaceErrorNotification;
 import com.googlecode.cqengine.query.Query;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -19,19 +21,26 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ChoiceBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.util.converter.IntegerStringConverter;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -44,21 +53,44 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
 public class DataCenterController implements Initializable {
 
 
+    @FXML private Button buttonGetResults;
+    @FXML private ChoiceBox choiceBoxTag;
+    @FXML private CheckBox checkBoxFamilyID;
+    @FXML private CheckBox checkBoxTag;
+    @FXML private TextField textFieldFamilyID;
+    @FXML private TextField textFieldParticipantID;
+    @FXML private CheckBox checkBoxParticipantID;
+    @FXML private TextField textFieldYear;
+    @FXML private CheckBox checkBoxYear;
+    @FXML private AnchorPane anchorPaneMain;
+    @FXML private Tab tabImports;
+    @FXML private Tab tabQuery;
+    @FXML private Label labelTag;
+    @FXML private Label labelYear;
+    @FXML private Label labelParticipantID;
+    @FXML private Label labelImportDate;
+    @FXML private Tab tabPlot;
+    @FXML private Tab tabData;
     @FXML private Button buttonSaveChanges;
     @FXML private Button buttonSynch;
     @FXML private ListView listViewExplorer;
     @FXML private Button buttonImportCSVData;
     @FXML private Button buttonSettings;
     @FXML private Button buttonExportToCSV;
-    @FXML private Button buttonPlot;
     @FXML private Label labelDataTitle;
     @FXML private TilePane tilePaneSummary;
     @FXML private TableView tableData;
 
-    // TODO: Initialize the table columns here, so that they can be accessed throughout the class
+    // Initialize the table columns here, so that they can be accessed throughout the class
+    private TableColumn tableColumnID = new TableColumn("ID");
+    private TableColumn tableColumnTime = new TableColumn("Time");
+    private TableColumn tableColumnDuration = new TableColumn("Duration");
+    private TableColumn tableColumnCode = new TableColumn("Code");
+    private TableColumn tableColumnComment = new TableColumn("Comment");
 
     private StillFaceDAO dao;
-    private Map<Integer, StillFaceCodeData> editedDataMap = new HashMap<>();
+    private Map<Integer, StillFaceData> editedDataMap = new HashMap<>();
+    private List<StillFaceData> visibleDataList = new ArrayList<>();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -82,24 +114,22 @@ public class DataCenterController implements Initializable {
         };
 
         // Initialize GUI Elements
-        TableColumn entryCol = new TableColumn("ID");
-        entryCol.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
-        entryCol.setCellValueFactory(new PropertyValueFactory<StillFaceCodeData, Integer>("dataID"));
+        tableColumnID.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
+        tableColumnID.setCellValueFactory(new PropertyValueFactory<StillFaceData, Integer>("dataID"));
 
-        TableColumn timeCol = new TableColumn("Time");
-        timeCol.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
-        timeCol.setCellValueFactory(new PropertyValueFactory<StillFaceCodeData, Integer>("time"));
-        timeCol.setCellFactory(c -> new NumericTextFieldTableCell<>(
+        tableColumnTime.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
+        tableColumnTime.setCellValueFactory(new PropertyValueFactory<StillFaceData, Integer>("time"));
+        tableColumnTime.setCellFactory(c -> new NumericTextFieldTableCell<>(
                 // note: each cell needs its own formatter
                 // see comment by @SurprisedCoconut
                 new TextFormatter<Integer>(
                         // note: should use local-aware converter instead of core!
                         new IntegerStringConverter(), 0,
                         filter)));
-        timeCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceCodeData, Integer>>() {
+        tableColumnTime.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceData, Integer>>() {
             @Override
-            public void handle(TableColumn.CellEditEvent<StillFaceCodeData, Integer> cellEditEvent) {
-                StillFaceCodeData data = cellEditEvent.getTableView().getItems()
+            public void handle(TableColumn.CellEditEvent<StillFaceData, Integer> cellEditEvent) {
+                StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setTime(cellEditEvent.getNewValue());
                 editedDataMap.put(data.getDataID(), data);
@@ -107,20 +137,19 @@ public class DataCenterController implements Initializable {
             }
         });
 
-        TableColumn durationCol = new TableColumn("Duration");
-        durationCol.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
-        durationCol.setCellValueFactory(new PropertyValueFactory<StillFaceCodeData, Integer>("duration"));
-        durationCol.setCellFactory(c -> new NumericTextFieldTableCell<>(
+        tableColumnDuration.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
+        tableColumnDuration.setCellValueFactory(new PropertyValueFactory<StillFaceData, Integer>("duration"));
+        tableColumnDuration.setCellFactory(c -> new NumericTextFieldTableCell<>(
                 // note: each cell needs its own formatter
                 // see comment by @SurprisedCoconut
                 new TextFormatter<Integer>(
                         // note: should use local-aware converter instead of core!
                         new IntegerStringConverter(), 0,
                         filter)));
-        durationCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceCodeData, Integer>>(){
+        tableColumnDuration.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceData, Integer>>(){
             @Override
-            public void handle(TableColumn.CellEditEvent<StillFaceCodeData, Integer> cellEditEvent){
-                StillFaceCodeData data = cellEditEvent.getTableView().getItems()
+            public void handle(TableColumn.CellEditEvent<StillFaceData, Integer> cellEditEvent){
+                StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setDuration(cellEditEvent.getNewValue());
                 editedDataMap.put(data.getDataID(), data);
@@ -128,15 +157,14 @@ public class DataCenterController implements Initializable {
             }
         });
 
-        TableColumn codeCol = new TableColumn("Code");
-        codeCol.prefWidthProperty().bind(tableData.widthProperty().multiply(0.20));
-        codeCol.setCellValueFactory(new PropertyValueFactory<StillFaceCodeData, StillFaceCode>("code"));
+        tableColumnCode.prefWidthProperty().bind(tableData.widthProperty().multiply(0.20));
+        tableColumnCode.setCellValueFactory(new PropertyValueFactory<StillFaceData, StillFaceCode>("code"));
         ObservableList<StillFaceCode> observableCodeList = FXCollections.observableArrayList(StillFaceModel.getCodeList());
-        codeCol.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
-        codeCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceCodeData, StillFaceCode>>() {
+        tableColumnCode.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
+        tableColumnCode.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceData, StillFaceCode>>() {
             @Override
-            public void handle(TableColumn.CellEditEvent<StillFaceCodeData, StillFaceCode> cellEditEvent) {
-                StillFaceCodeData data = cellEditEvent.getTableView().getItems()
+            public void handle(TableColumn.CellEditEvent<StillFaceData, StillFaceCode> cellEditEvent) {
+                StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setCode(cellEditEvent.getNewValue());
                 editedDataMap.put(data.getDataID(), data);
@@ -144,14 +172,13 @@ public class DataCenterController implements Initializable {
             }
         });
 
-        TableColumn commentCol = new TableColumn("Comment");
-        commentCol.prefWidthProperty().bind(tableData.widthProperty().multiply(0.50));
-        commentCol.setCellValueFactory(new PropertyValueFactory<StillFaceCodeData, String>("comment"));
-        commentCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        commentCol.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceCodeData, String>>() {
+        tableColumnComment.prefWidthProperty().bind(tableData.widthProperty().multiply(0.5));
+        tableColumnComment.setCellValueFactory(new PropertyValueFactory<StillFaceData, String>("comment"));
+        tableColumnComment.setCellFactory(TextFieldTableCell.forTableColumn());
+        tableColumnComment.setOnEditCommit(new EventHandler<TableColumn.CellEditEvent<StillFaceData, String>>() {
             @Override
-            public void handle(TableColumn.CellEditEvent<StillFaceCodeData, String> cellEditEvent) {
-                StillFaceCodeData data = cellEditEvent.getTableView().getItems()
+            public void handle(TableColumn.CellEditEvent<StillFaceData, String> cellEditEvent) {
+                StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setComment(cellEditEvent.getNewValue());
                 editedDataMap.put(data.getDataID(), data);
@@ -160,7 +187,8 @@ public class DataCenterController implements Initializable {
         });
 
         tableData.setEditable(true);
-        tableData.getColumns().addAll(entryCol, timeCol, durationCol, codeCol, commentCol);
+        tableData.getColumns().addAll(tableColumnID, tableColumnTime, tableColumnDuration, tableColumnCode,
+                tableColumnComment);
 
         tilePaneSummary.setHgap(10);
         tilePaneSummary.setVgap(10);
@@ -168,12 +196,41 @@ public class DataCenterController implements Initializable {
         tilePaneSummary.setOrientation(Orientation.VERTICAL);
 
         buttonSaveChanges.setDisable(true);
+        buttonExportToCSV.setDisable(true);
+
+        textFieldYear.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    textFieldYear.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
+        textFieldFamilyID.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    textFieldFamilyID.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
+        textFieldParticipantID.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue,
+                                String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    textFieldParticipantID.setText(newValue.replaceAll("[^\\d]", ""));
+                }
+            }
+        });
 
         // Setup the listeners
-        listViewExplorer.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceImportData>() {
+        listViewExplorer.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceImport>() {
             @Override
-            public void changed(ObservableValue<? extends StillFaceImportData> observable,
-                                StillFaceImportData oldValue, StillFaceImportData newValue) {
+            public void changed(ObservableValue<? extends StillFaceImport> observable,
+                                StillFaceImport oldValue, StillFaceImport newValue) {
                 if(newValue != null){
                     updateData(newValue.getImportID());
                 }
@@ -181,6 +238,7 @@ public class DataCenterController implements Initializable {
             }
         });
         updateImports();
+
     }
 
     @FXML
@@ -209,6 +267,8 @@ public class DataCenterController implements Initializable {
             stage.setScene(scene);
             stage.showAndWait();
             StillFaceModel.getInstance().refresh();
+            ObservableList<StillFaceCode> observableCodeList = FXCollections.observableArrayList(StillFaceModel.getCodeList());
+            tableColumnCode.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
         }
         catch(IOException e){
             PMLogger.getInstance().error("Unable to open settings dialogue: " + e.getMessage());
@@ -234,33 +294,69 @@ public class DataCenterController implements Initializable {
         else {
             sync();
         }
-        if(editedDataMap.size() == 0) resetView();
     }
 
     private void sync(){
-        PMLogger.getInstance().info("Synchronizing with database");
-        StillFaceModel.getInstance().refresh();
-        clearEdits();
+        new StillFaceSyncTask(new StillFaceTaskCallback() {
+            @Override
+            public void onSuccess() {
+                clearEdits();
+                resetView();
+            }
+
+            @Override
+            public void onFail(Throwable exception) {
+                new StillFaceErrorNotification("An error occurred while synchronizing with the database: " +
+                        exception.getMessage()).show();
+            }
+        }).execute();
     }
 
     @FXML
     private void onSaveChanges(ActionEvent actionEvent) {
-        if(editedDataMap.size() != 0){
-            for(int key : editedDataMap.keySet()){
-                this.dao.updateCodeData(editedDataMap.get(key));
+        new StillFaceSaveTask(editedDataMap, new StillFaceTaskCallback() {
+            @Override
+            public void onSuccess() {
+                buttonSaveChanges.setDisable(true);
             }
-            editedDataMap.clear();
-            StillFaceModel.getInstance().refreshCodeData();
-        }
-        buttonSaveChanges.setDisable(true);
+
+            @Override
+            public void onFail(Throwable exception) {
+                new StillFaceErrorNotification("An error occurred while trying to save changes: "
+                        + exception.getMessage()).show();
+            }
+        }).execute();
+    }
+
+    @FXML
+    private void onExport(ActionEvent actionEvent) {
+        Optional<String> result = showExportDialog();
+        result.ifPresent(exportFile -> {
+            new StillFaceExportTask(visibleDataList, exportFile, new StillFaceTaskCallback() {
+                @Override
+                public void onSuccess() {
+
+                }
+
+                @Override
+                public void onFail(Throwable exception) {
+                    new StillFaceErrorNotification("An error has occured: " + exception.getMessage()).show();
+                }
+            }).execute();
+        });
+    }
+
+    @FXML
+    private void onGetResults(ActionEvent actionEvent) {
+
     }
 
     private void updateImports(){
         // Get the import data
-        Query<StillFaceImportData> importDataQuery = not(equal(StillFaceImportData.IMPORT_ID, 0));
-        List<StillFaceImportData> importDataList = new ArrayList<>();
-        for (StillFaceImportData data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery,
-                queryOptions(orderBy(ascending(StillFaceImportData.DATE), ascending(StillFaceImportData.IMPORT_ID))))) {
+        Query<StillFaceImport> importDataQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
+        List<StillFaceImport> importDataList = new ArrayList<>();
+        for (StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery,
+                queryOptions(orderBy(ascending(StillFaceImport.DATE), ascending(StillFaceImport.IMPORT_ID))))) {
             importDataList.add(data);
         }
         listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
@@ -269,7 +365,13 @@ public class DataCenterController implements Initializable {
     private void resetView(){
         tableData.setItems(null);
         labelDataTitle.setText("");
+        labelYear.setText("Year:");
+        labelTag.setText("Tag:");
+        labelParticipantID.setText("Participant ID:");
+        labelImportDate.setText("Import Date:");
         tilePaneSummary.getChildren().clear();
+        buttonExportToCSV.setDisable(true);
+        buttonSaveChanges.setDisable(true);
         updateImports();
     }
 
@@ -277,24 +379,24 @@ public class DataCenterController implements Initializable {
 
         PMLogger.getInstance().info("Filling table with import data. Import ID: " + importID);
 
-        Query<StillFaceImportData> importDataQuery = equal(StillFaceImportData.IMPORT_ID, importID);
-        for(StillFaceImportData data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery)){
-            if(!data.getAlias().equals("N/A") || !data.getAlias().equals("")){
-                labelDataTitle.setText(data.getAlias() + ": " + data.getFilename());
-            }
-            else{
-                labelDataTitle.setText(data.getFilename());
-            }
+        visibleDataList.clear();
+
+        Query<StillFaceImport> importDataQuery = equal(StillFaceImport.IMPORT_ID, importID);
+        for(StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery)){
+            labelDataTitle.setText(data.getAlias());
+            labelYear.setText("Year: " + data.getYear());
+            labelTag.setText("Tag: " + data.getTag().getTagValue());
+            labelParticipantID.setText("Participant ID: " + data.getParticipantNumber());
+            labelImportDate.setText("Import Date: " + data.getDate());
         }
 
         // Set up some maps to hold summary data
         Map<String, Integer> mostCommonCode = new HashMap<>();
 
-        Query<StillFaceCodeData> codeDataQuery = equal(StillFaceCodeData.IMPORT_ID, importID);
-        List<StillFaceCodeData> codeDataList = new ArrayList<>();
-        for(StillFaceCodeData data : StillFaceModel.getInstance().getDataCollection().retrieve(codeDataQuery,
-                queryOptions(orderBy(ascending(StillFaceCodeData.TIME), ascending(StillFaceCodeData.DATA_ID))))){
-            codeDataList.add(data);
+        Query<StillFaceData> codeDataQuery = equal(StillFaceData.IMPORT_ID, importID);
+        for(StillFaceData data : StillFaceModel.getInstance().getDataCollection().retrieve(codeDataQuery,
+                queryOptions(orderBy(ascending(StillFaceData.TIME), ascending(StillFaceData.DATA_ID))))){
+            visibleDataList.add(data);
 
             // Code stats
             String codeName = data.getCode().getName();
@@ -307,9 +409,9 @@ public class DataCenterController implements Initializable {
             }
         }
 
-        PMLogger.getInstance().info("Table data size: " + codeDataList.size());
+        PMLogger.getInstance().info("Table data size: " + visibleDataList.size());
 
-        ObservableList<StillFaceCodeData> data = FXCollections.observableArrayList(codeDataList);
+        ObservableList<StillFaceData> data = FXCollections.observableArrayList(visibleDataList);
 
         tableData.setItems(data);
 
@@ -321,10 +423,17 @@ public class DataCenterController implements Initializable {
             }
         }
         tilePaneSummary.getChildren().clear();
-        tilePaneSummary.getChildren().add(new Text("Number of codes: " + codeDataList.size()));
+        tilePaneSummary.getChildren().add(new Text("Number of codes: " + visibleDataList.size()));
         tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
         tilePaneSummary.getChildren().add(new Text("Most common code: " + maxEntry.getKey()));
-        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + codeDataList.get(codeDataList.size() - 1).getTime()/1000));
+        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + visibleDataList.get(visibleDataList.size() - 1).getTime()/1000));
+
+        buttonExportToCSV.setDisable(false);
+
+    }
+
+    private void updateQueryData(){
+        PMLogger.getInstance().info("Performing search");
 
     }
 
@@ -333,4 +442,78 @@ public class DataCenterController implements Initializable {
         PMLogger.getInstance().info("Edits cleared");
     }
 
+    private Optional<String> showExportDialog(){
+        // Create the custom dialog.
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Export File");
+        dialog.setHeaderText("Select a directory to export the data to.");
+
+
+        // Set the button types.
+        ButtonType exportButtonType = new ButtonType("Export", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(exportButtonType, ButtonType.CANCEL);
+
+        // Create the layout grid
+        GridPane grid = new GridPane();
+        grid.getColumnConstraints().add(new ColumnConstraints(150));
+        grid.getColumnConstraints().add(new ColumnConstraints(400));
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        Label labelExportLocation = new Label();
+
+        Button buttonDirectoryChooser = new Button();
+        buttonDirectoryChooser.setText("Choose Directory");
+        buttonDirectoryChooser.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                DirectoryChooser directoryChooser = new DirectoryChooser();
+                directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+                File chosenFile =
+                        directoryChooser.showDialog(buttonDirectoryChooser.getScene().getWindow());
+
+                if(chosenFile == null){
+                    labelExportLocation.setText("");
+                }else{
+                    labelExportLocation.setText(chosenFile.getAbsolutePath());
+                }
+            }
+        });
+
+        TextField textFieldFileName = new TextField();
+        textFieldFileName.setPromptText("Enter file name");
+
+        grid.add(buttonDirectoryChooser, 0, 0);
+        grid.add(labelExportLocation, 1, 0);
+        grid.add(new Label("Name of File:"), 0, 1);
+        grid.add(textFieldFileName, 1, 1);
+
+        // Enable/Disable login button depending on whether a username was entered.
+        Node exportButton = dialog.getDialogPane().lookupButton(exportButtonType);
+        exportButton.setDisable(true);
+
+        // Do some validation (using the Java 8 lambda syntax).
+        textFieldFileName.textProperty().addListener((observable, oldValue, newValue) -> {
+            exportButton.setDisable(newValue.trim().isEmpty() || labelExportLocation.getText().isEmpty());
+        });
+        labelExportLocation.textProperty().addListener((observable, oldValue, newValue) -> {
+            exportButton.setDisable(newValue.trim().isEmpty() || textFieldFileName.getText().isEmpty());
+        });
+
+        dialog.getDialogPane().setContent(grid);
+
+
+        // Convert the result to a username-password-pair when the login button is clicked.
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == exportButtonType &&
+                    !textFieldFileName.getText().isEmpty() &&
+                    !labelExportLocation.getText().isEmpty()) {
+                return labelExportLocation.getText() + File.separator +  textFieldFileName.getText() + ".csv";
+            }
+            return null;
+        });
+
+        return dialog.showAndWait();
+    }
 }
