@@ -1,20 +1,17 @@
 package com.byu.pmedia.tasks;
 
-import com.byu.pmedia.model.StillFaceData;
+import com.byu.pmedia.model.StillFaceModel;
 import com.byu.pmedia.model.StillFaceVideoData;
 import com.byu.pmedia.parser.StillFaceCSVParser;
 import javafx.concurrent.Task;
 
-import java.util.List;
 
 public class StillFaceExportTask implements IStillFaceTask {
 
-    private List<StillFaceData> data;
     private String filepath;
     private StillFaceTaskCallback callback;
 
-    public StillFaceExportTask(List<StillFaceData> data, String filepath, StillFaceTaskCallback callback){
-        this.data = data;
+    public StillFaceExportTask(String filepath, StillFaceTaskCallback callback){
         this.filepath = filepath;
         this.callback = callback;
     }
@@ -45,7 +42,7 @@ public class StillFaceExportTask implements IStillFaceTask {
 
     private void exportData() throws Exception{
         boolean success = new StillFaceCSVParser().serializeToCSVFromCodedVideoData(
-                new StillFaceVideoData(this.data), this.filepath);
+                new StillFaceVideoData(StillFaceModel.getInstance().getVisibleDataList()), this.filepath);
         if(!success){
             throw new Exception("Failed to export data. See log for more information.");
         }

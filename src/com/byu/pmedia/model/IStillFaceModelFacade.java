@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public interface IStillFaceModelFacade {
 
+    StillFaceModel getInstance();
+
     ArrayList<StillFaceImport> getImportDataAsArrayList();
 
     ArrayList<StillFaceData> getCodeDataAsArrayList();

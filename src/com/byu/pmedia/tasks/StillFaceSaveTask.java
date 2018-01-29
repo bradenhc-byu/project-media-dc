@@ -5,17 +5,14 @@ import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceModel;
 import javafx.concurrent.Task;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class StillFaceSaveTask implements IStillFaceTask {
 
-    private Map<Integer, StillFaceData> dataMap = new HashMap<>();
     private StillFaceTaskCallback callback;
     private StillFaceDAO dao;
 
-    public StillFaceSaveTask(Map<Integer, StillFaceData> dataMap, StillFaceTaskCallback callback) {
-        this.dataMap = dataMap;
+    public StillFaceSaveTask(StillFaceTaskCallback callback) {
         this.callback = callback;
         this.dao = StillFaceDAO.generateFromConfig();
     }
@@ -45,7 +42,8 @@ public class StillFaceSaveTask implements IStillFaceTask {
     }
 
     private void saveData() throws Exception {
-        if(dataMap.size() != 0){
+        Map<Integer, StillFaceData> dataMap = StillFaceModel.getInstance().getEditedDataMap();
+        if(StillFaceModel.getInstance().getEditedDataMap().size() != 0){
             for(int key : dataMap.keySet()){
                 boolean success = dao.updateCodeData(dataMap.get(key));
                 if(!success){

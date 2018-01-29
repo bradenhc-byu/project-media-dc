@@ -1,6 +1,16 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.controller;
 
-import com.byu.pmedia.database.StillFaceDAO;
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.*;
 import com.byu.pmedia.tasks.StillFaceExportTask;
@@ -50,11 +60,21 @@ import java.util.function.UnaryOperator;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
+/**
+ * DataCenterController
+ * Provides initialization for JavaFX elements as part of the main DataCenter GUI, as well as the program's responses
+ * to user interaction with the GUI.
+ *
+ * @author Braden Hitchcock
+ */
 public class DataCenterController implements Initializable {
 
-
+    /* These variables are linked to an FXML stylesheet to generate the view for which this
+    * controller is used.
+    * When adding new elements, be sure to use the @FXML attribute with a private variable definition to follow
+    * good coding standards and practices. */
     @FXML private Button buttonGetResults;
-    @FXML private ChoiceBox choiceBoxTag;
+    @FXML private ChoiceBox<StillFaceTag> choiceBoxTag;
     @FXML private CheckBox checkBoxFamilyID;
     @FXML private CheckBox checkBoxTag;
     @FXML private TextField textFieldFamilyID;
@@ -88,15 +108,47 @@ public class DataCenterController implements Initializable {
     private TableColumn tableColumnCode = new TableColumn("Code");
     private TableColumn tableColumnComment = new TableColumn("Comment");
 
-    private StillFaceDAO dao;
-    private Map<Integer, StillFaceData> editedDataMap = new HashMap<>();
-    private List<StillFaceData> visibleDataList = new ArrayList<>();
-
+    /**
+     * Initializes the controller and sets properties for the view elements when the FXMLLoader.load() method
+     * is called. This method implements the Initializable interface method.
+     * @param url The location used to resolve relative paths for the root object, or null if the location is not known.
+     * @param resourceBundle The resources used to localize the root object, or null if the root object was not localized.
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Initialize the DAO
-        this.dao = StillFaceDAO.generateFromConfig();
 
+        initializeDataTable();
+
+        initializeSearchTab();
+
+        // Setup miscellaneous FXML element properties
+        tilePaneSummary.setHgap(10);
+        tilePaneSummary.setVgap(10);
+        tilePaneSummary.setTileAlignment(Pos.CENTER_LEFT);
+        tilePaneSummary.setOrientation(Orientation.VERTICAL);
+
+        buttonSaveChanges.setDisable(true);
+        buttonExportToCSV.setDisable(true);
+
+        // Setup miscellaneous listeners
+        listViewExplorer.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceImport>() {
+            @Override
+            public void changed(ObservableValue<? extends StillFaceImport> observable,
+                                StillFaceImport oldValue, StillFaceImport newValue) {
+                if(newValue != null){
+                    updateData(newValue.getImportID());
+                }
+
+            }
+        });
+        updateImports();
+
+    }
+
+    /**
+     * Defines properties for FXML elements that are a part of the table displaying StillFaceData from the database.
+     */
+    private void initializeDataTable(){
         // Set up a number formatted table cell
         NumberFormat format = NumberFormat.getIntegerInstance();
         UnaryOperator<TextFormatter.Change> filter = c -> {
@@ -112,7 +164,6 @@ public class DataCenterController implements Initializable {
             }
             return c;
         };
-
         // Initialize GUI Elements
         tableColumnID.prefWidthProperty().bind(tableData.widthProperty().multiply(0.10));
         tableColumnID.setCellValueFactory(new PropertyValueFactory<StillFaceData, Integer>("dataID"));
@@ -132,7 +183,7 @@ public class DataCenterController implements Initializable {
                 StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setTime(cellEditEvent.getNewValue());
-                editedDataMap.put(data.getDataID(), data);
+                StillFaceModel.getInstance().addEditedData(data);
                 buttonSaveChanges.setDisable(false);
             }
         });
@@ -152,7 +203,7 @@ public class DataCenterController implements Initializable {
                 StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setDuration(cellEditEvent.getNewValue());
-                editedDataMap.put(data.getDataID(), data);
+                StillFaceModel.getInstance().addEditedData(data);
                 buttonSaveChanges.setDisable(false);
             }
         });
@@ -167,7 +218,7 @@ public class DataCenterController implements Initializable {
                 StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setCode(cellEditEvent.getNewValue());
-                editedDataMap.put(data.getDataID(), data);
+                StillFaceModel.getInstance().addEditedData(data);
                 buttonSaveChanges.setDisable(false);
             }
         });
@@ -181,7 +232,7 @@ public class DataCenterController implements Initializable {
                 StillFaceData data = cellEditEvent.getTableView().getItems()
                         .get(cellEditEvent.getTablePosition().getRow());
                 data.setComment(cellEditEvent.getNewValue());
-                editedDataMap.put(data.getDataID(), data);
+                StillFaceModel.getInstance().addEditedData(data);
                 buttonSaveChanges.setDisable(false);
             }
         });
@@ -189,15 +240,14 @@ public class DataCenterController implements Initializable {
         tableData.setEditable(true);
         tableData.getColumns().addAll(tableColumnID, tableColumnTime, tableColumnDuration, tableColumnCode,
                 tableColumnComment);
+    }
 
-        tilePaneSummary.setHgap(10);
-        tilePaneSummary.setVgap(10);
-        tilePaneSummary.setTileAlignment(Pos.CENTER_LEFT);
-        tilePaneSummary.setOrientation(Orientation.VERTICAL);
-
-        buttonSaveChanges.setDisable(true);
-        buttonExportToCSV.setDisable(true);
-
+    /**
+     * Defines properties and attributes for FXML elements associated with the search functionality that allows the
+     * user to search for StillFaceData elements that share specified properties and values.
+     */
+    private void initializeSearchTab(){
+        // Format the text fields so that they will only accept numbers as input
         textFieldYear.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue,
@@ -226,21 +276,15 @@ public class DataCenterController implements Initializable {
             }
         });
 
-        // Setup the listeners
-        listViewExplorer.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceImport>() {
-            @Override
-            public void changed(ObservableValue<? extends StillFaceImport> observable,
-                                StillFaceImport oldValue, StillFaceImport newValue) {
-                if(newValue != null){
-                    updateData(newValue.getImportID());
-                }
-
-            }
-        });
-        updateImports();
-
+        choiceBoxTag.setItems(FXCollections.observableList(StillFaceModel.getTagList()));
     }
 
+    /**
+     * Listener triggered when the 'Import' button detects an action from the user. This method will open a new window
+     * that allows the user to select a data file to import and define metadata associated with the import.
+     *
+     * @param actionEvent The event detected by the listener
+     */
     @FXML
     private void onImportCSVData(ActionEvent actionEvent) {
         try {
@@ -257,6 +301,12 @@ public class DataCenterController implements Initializable {
         }
     }
 
+    /**
+     * Listener triggered when the 'Settings' button detects an action from the user. This method will open a new window
+     * that allows the user to change program settings and configuration.
+     *
+     * @param actionEvent The event detected by the listener
+     */
     @FXML
     private void onSettings(ActionEvent actionEvent) {
         try {
@@ -275,9 +325,17 @@ public class DataCenterController implements Initializable {
         }
     }
 
+    /**
+     * Listener triggered when the 'Sync' button detects and action from the user. If changes made by the user have
+     * not been saved, a dialog will appear informing the user that proceeding will cause all unsaved changes to be
+     * lost, and then ask the user if they want to proceed. If the user desires to proceed, the data internal to the
+     * model will be updated with the latest information from the database, and the GUI view will be reset.
+     *
+     * @param actionEvent The event detected by the listener
+     */
     @FXML
     private void onSync(ActionEvent actionEvent) {
-        if(editedDataMap.size() > 0){
+        if(StillFaceModel.getInstance().getEditedDataMap().size() > 0){
             new StillFaceConfirmNotification("Syncing with the database will discard any unsaved changes." +
                     "You have unsaved changes. Do you want to continue?", new ConfirmAction() {
                 @Override
@@ -296,6 +354,10 @@ public class DataCenterController implements Initializable {
         }
     }
 
+    /**
+     * Refreshes the internal data model with the latest data from the database and clears any changes the user
+     * has not saved into the database.
+     */
     private void sync(){
         new StillFaceSyncTask(new StillFaceTaskCallback() {
             @Override
@@ -312,9 +374,15 @@ public class DataCenterController implements Initializable {
         }).execute();
     }
 
+    /**
+     * Listener triggered when the 'Save Changes' button detects and action from the user. It will attempt to update
+     * the database with any changes the user has made to the in-memory data of the model.
+     *
+     * @param actionEvent The event detected by the listener
+     */
     @FXML
     private void onSaveChanges(ActionEvent actionEvent) {
-        new StillFaceSaveTask(editedDataMap, new StillFaceTaskCallback() {
+        new StillFaceSaveTask(new StillFaceTaskCallback() {
             @Override
             public void onSuccess() {
                 buttonSaveChanges.setDisable(true);
@@ -328,11 +396,17 @@ public class DataCenterController implements Initializable {
         }).execute();
     }
 
+    /**
+     * Listener triggered when the 'Export' button detects an action from the user. It will attempt to export the
+     * presently visible data to a CSV file that the user selects.
+     *
+     * @param actionEvent The event detected by the listener
+     */
     @FXML
     private void onExport(ActionEvent actionEvent) {
         Optional<String> result = showExportDialog();
         result.ifPresent(exportFile -> {
-            new StillFaceExportTask(visibleDataList, exportFile, new StillFaceTaskCallback() {
+            new StillFaceExportTask(exportFile, new StillFaceTaskCallback() {
                 @Override
                 public void onSuccess() {
 
@@ -346,11 +420,22 @@ public class DataCenterController implements Initializable {
         });
     }
 
+    /**
+     * Listener triggered when the 'Get Results' query button detects an action from the user. It will take the
+     * parameters entered by the user and search the in-memory data for StillFaceData that matches the query (if the
+     * data is cached), or query the database to get the results (if the data is not cached).
+     *
+     * @param actionEvent The event detected by the listener
+     */
     @FXML
     private void onGetResults(ActionEvent actionEvent) {
-
+        updateQueryData();
     }
 
+    /**
+     * Updates the visible list of imports in the GUI with the latest entries from the database. NOTE: this does not
+     * sync with the database unless the program is not in cache mode.
+     */
     private void updateImports(){
         // Get the import data
         Query<StillFaceImport> importDataQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
@@ -362,6 +447,9 @@ public class DataCenterController implements Initializable {
         listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
     }
 
+    /**
+     * Restores the GUI view to the way it was when the user first opened the program
+     */
     private void resetView(){
         tableData.setItems(null);
         labelDataTitle.setText("");
@@ -375,11 +463,18 @@ public class DataCenterController implements Initializable {
         updateImports();
     }
 
+    /**
+     * Updates the data visible in the GUI data table when an import is selected from the list view.
+     *
+     * @param importID The ID of the import that was selected by the user
+     */
     private void updateData(int importID){
+
+        List<StillFaceData> dataList = StillFaceModel.getInstance().getVisibleDataList();
 
         PMLogger.getInstance().info("Filling table with import data. Import ID: " + importID);
 
-        visibleDataList.clear();
+        dataList.clear();
 
         Query<StillFaceImport> importDataQuery = equal(StillFaceImport.IMPORT_ID, importID);
         for(StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery)){
@@ -396,7 +491,7 @@ public class DataCenterController implements Initializable {
         Query<StillFaceData> codeDataQuery = equal(StillFaceData.IMPORT_ID, importID);
         for(StillFaceData data : StillFaceModel.getInstance().getDataCollection().retrieve(codeDataQuery,
                 queryOptions(orderBy(ascending(StillFaceData.TIME), ascending(StillFaceData.DATA_ID))))){
-            visibleDataList.add(data);
+            dataList.add(data);
 
             // Code stats
             String codeName = data.getCode().getName();
@@ -409,9 +504,9 @@ public class DataCenterController implements Initializable {
             }
         }
 
-        PMLogger.getInstance().info("Table data size: " + visibleDataList.size());
+        PMLogger.getInstance().info("Table data size: " + StillFaceModel.getInstance().getVisibleDataList().size());
 
-        ObservableList<StillFaceData> data = FXCollections.observableArrayList(visibleDataList);
+        ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
 
         tableData.setItems(data);
 
@@ -423,25 +518,99 @@ public class DataCenterController implements Initializable {
             }
         }
         tilePaneSummary.getChildren().clear();
-        tilePaneSummary.getChildren().add(new Text("Number of codes: " + visibleDataList.size()));
+        tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
         tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
-        tilePaneSummary.getChildren().add(new Text("Most common code: " + maxEntry.getKey()));
-        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + visibleDataList.get(visibleDataList.size() - 1).getTime()/1000));
+        String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
+        tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
+        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + dataList.get(dataList.size() - 1).getTime()/1000));
 
         buttonExportToCSV.setDisable(false);
 
     }
 
+    /**
+     * Updates the visible data in the data table based on query parameters specified by the user.
+     */
     private void updateQueryData(){
+        List<StillFaceData> dataList = StillFaceModel.getInstance().getVisibleDataList();
         PMLogger.getInstance().info("Performing search");
+        dataList.clear();
+        Query<StillFaceImport> importQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
+        if(checkBoxYear.isSelected()){
+            importQuery = and(importQuery, equal(StillFaceImport.YEAR, Integer.parseInt(textFieldYear.getText())));
+        }
+        if(checkBoxFamilyID.isSelected()){
+            importQuery = and(importQuery, equal(StillFaceImport.FAMILY_ID, Integer.parseInt(textFieldFamilyID.getText())));
+        }
+        if(checkBoxParticipantID.isSelected()){
+            importQuery = and(importQuery, equal(StillFaceImport.PARTICIPANT_ID, Integer.parseInt(textFieldParticipantID.getText())));
+        }
+        if(checkBoxTag.isSelected()){
+            importQuery = and(importQuery, equal(StillFaceImport.TAG, choiceBoxTag.getValue()));
+        }
+        Query<StillFaceData> dataQuery = equal(StillFaceData.DATA_ID, Integer.MAX_VALUE);
+        for(StillFaceImport i : StillFaceModel.getInstance().getImportDataCollection().retrieve(importQuery)){
+            dataQuery = or(dataQuery, equal(StillFaceData.IMPORT_ID, i.getImportID()));
+        }
+        // Set up some maps to hold summary data
+        Map<String, Integer> mostCommonCode = new HashMap<>();
+        for(StillFaceData d : StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery,
+                queryOptions(orderBy(ascending(StillFaceData.DATA_ID))))){
+            dataList.add(d);
+            // Code stats
+            String codeName = d.getCode().getName();
+            if(mostCommonCode.containsKey(codeName)){
+                int count = mostCommonCode.get(codeName);
+                mostCommonCode.put(codeName, count + 1);
+            }
+            else{
+                mostCommonCode.put(codeName, 1);
+            }
+        }
+        PMLogger.getInstance().info("Table data size: " + dataList.size());
 
+        ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
+
+        tableData.setItems(data);
+
+        // Put in some summary data
+        Map.Entry<String, Integer> maxEntry = null;
+        for(Map.Entry<String, Integer> entry : mostCommonCode.entrySet()){
+            if(maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0){
+                maxEntry = entry;
+            }
+        }
+
+        labelDataTitle.setText("Search Results");
+
+        tilePaneSummary.getChildren().clear();
+        tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
+        tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
+        String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
+        tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
+
+        buttonExportToCSV.setDisable(false);
+        labelImportDate.setText("");
+        labelParticipantID.setText("");
+        labelYear.setText("");
+        labelTag.setText("");
     }
 
+    /**
+     * Clears any changes made by the user. The changes will not be saved.
+     */
     private void clearEdits(){
-        editedDataMap.clear();
+        StillFaceModel.getInstance().getEditedDataMap().clear();
         PMLogger.getInstance().info("Edits cleared");
     }
 
+    /**
+     * Creates and shows a dialog that allows the user to select what directory they want to export the visible data
+     * to and provide a name for the file.
+     *
+     * @return An Optional object that contains the full filepath to the file the data should be saved to if the
+     *         user has correctly filled out the dialog, otherwise it is null if the user cancels the export
+     */
     private Optional<String> showExportDialog(){
         // Create the custom dialog.
         Dialog<String> dialog = new Dialog<>();

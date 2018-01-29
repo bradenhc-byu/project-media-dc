@@ -1,3 +1,14 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.model;
 
 import com.byu.pmedia.config.StillFaceConfig;
@@ -9,10 +20,22 @@ import com.googlecode.cqengine.query.Query;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
+/**
+ * StillFaceModel
+ * Data structure for keeping track of database data and user edits in memory. The This model is populated from the
+ * Project MEDIA database and, depending on user caching configuration, can hold all of the data in the databse or
+ * only the data requested by the user. Data from inside this model should be accessed via the SFModelFacade per
+ * good programming practices.
+ * TODO: implement the Model Facade
+ *
+ * @author Braden Hitchcock
+ */
 public class StillFaceModel {
 
     private StillFaceDAO dao;               // Database Access Object for the model
@@ -20,16 +43,37 @@ public class StillFaceModel {
                                             // and retrieving data from the model will not refer to the database server
     private boolean initialized = false;    // Flag to check if the model has been initialized
 
+    /* Collections that hold data. They are CQEngine IndexedCollections, allowing for extremely fast data querying
+     * and manipulation (SQL-like interactions with in-memory data structures. */
     private IndexedCollection<StillFaceImport> importDataCollection = new ConcurrentIndexedCollection<>();
     private IndexedCollection<StillFaceData> dataCollection = new ConcurrentIndexedCollection<>();
     private IndexedCollection<StillFaceCode> codeCollection = new ConcurrentIndexedCollection<>();
     private IndexedCollection<StillFaceTag> tagCollection = new ConcurrentIndexedCollection<>();
 
+    /* These static lists contain the Codes and Tags used by the program and allow lists of the available codes and
+     * tags to be produced easily */
     private static List<StillFaceCode> codeList = new ArrayList<>();
     private static List<StillFaceTag> tagList = new ArrayList<>();
 
+    /* This map contains edits made to StillFace data by the user, providing a way to track what changes are made and
+     * update the database when the user saves their changes. Placing the map here in the model allows it to be
+     * accessible from multiple places in the program via the singleton pattern, meaning that we can register
+     * keyboard shortcuts (such as Ctrl+s) that can perform actions on it. */
+    private Map<Integer, StillFaceData> editedDataMap = new HashMap<>();
+
+    /* This map contains the data that is currently visible to the user as an array. Useful in allowing the data to
+     * be exported as a CSV file or be plotted when the user switches to plot mode. */
+    private List<StillFaceData> visibleDataList = new ArrayList<>();
+
+    // The SINGLETON instance of the model
     private static StillFaceModel singleton;
 
+    /**
+     * Static method that will return the singleton instance of the data model. If the instance has not been created
+     * yet, it will create the instance before returning a reference to it.
+     *
+     * @return A reference to the StillFaceModel singleton instance
+     */
     public static StillFaceModel getInstance(){
         if(singleton == null){
             singleton = new StillFaceModel();
@@ -37,6 +81,13 @@ public class StillFaceModel {
         return singleton;
     }
 
+    /**
+     * Populates the internal data structures of the model using information from the database.
+     *
+     * @param dao The data access object uses to access the database
+     *
+     * @return True if the initialization was successful, false otherwise
+     */
     public boolean initialize(StillFaceDAO dao){
         try {
             // TODO: correctly implement caching
@@ -83,6 +134,18 @@ public class StillFaceModel {
     public static List<StillFaceCode> getCodeList(){ return codeList; }
 
     public static List<StillFaceTag> getTagList() { return tagList; }
+
+    public List<StillFaceData> getVisibleDataList(){ return visibleDataList; }
+
+    public void addVisibleData(StillFaceData data){
+        visibleDataList.add(data);
+    }
+
+    public Map<Integer, StillFaceData> getEditedDataMap(){ return editedDataMap; }
+
+    public void addEditedData(StillFaceData data){
+        editedDataMap.put(data.getDataID(), data);
+    }
 
     public boolean refreshImportData(){
         if(this.initialized){
