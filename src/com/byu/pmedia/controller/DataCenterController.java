@@ -67,7 +67,7 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
  *
  * @author Braden Hitchcock
  */
-public class DataCenterController implements Initializable {
+public class DataCenterController implements Initializable, Observer {
 
     /* These variables are linked to an FXML stylesheet to generate the view for which this
     * controller is used.
@@ -136,12 +136,15 @@ public class DataCenterController implements Initializable {
             public void changed(ObservableValue<? extends StillFaceImport> observable,
                                 StillFaceImport oldValue, StillFaceImport newValue) {
                 if(newValue != null){
-                    updateData(newValue.getImportID());
+                    populateVisibleDataFromImport(newValue.getImportID());
                 }
 
             }
         });
         updateImports();
+
+        // Everything is set up, now register with the observer
+        StillFaceModel.getInstance().addObserver(this);
 
     }
 
@@ -294,7 +297,6 @@ public class DataCenterController implements Initializable {
             stage.setTitle("Import CSV");
             stage.setScene(scene);
             stage.showAndWait();
-            updateImports();
         }
         catch(IOException e){
             PMLogger.getInstance().error("Unable to open import dialogue: " + e.getMessage());
@@ -316,9 +318,6 @@ public class DataCenterController implements Initializable {
             stage.setTitle("Data Center Settings");
             stage.setScene(scene);
             stage.showAndWait();
-            StillFaceModel.getInstance().refresh();
-            ObservableList<StillFaceCode> observableCodeList = FXCollections.observableArrayList(StillFaceModel.getCodeList());
-            tableColumnCode.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
         }
         catch(IOException e){
             PMLogger.getInstance().error("Unable to open settings dialogue: " + e.getMessage());
@@ -362,8 +361,7 @@ public class DataCenterController implements Initializable {
         new StillFaceSyncTask(new StillFaceTaskCallback() {
             @Override
             public void onSuccess() {
-                clearEdits();
-                resetView();
+                StillFaceModel.getInstance().notifyObservers();
             }
 
             @Override
@@ -385,7 +383,7 @@ public class DataCenterController implements Initializable {
         new StillFaceSaveTask(new StillFaceTaskCallback() {
             @Override
             public void onSuccess() {
-                buttonSaveChanges.setDisable(true);
+                StillFaceModel.getInstance().notifyObservers();
             }
 
             @Override
@@ -429,111 +427,47 @@ public class DataCenterController implements Initializable {
      */
     @FXML
     private void onGetResults(ActionEvent actionEvent) {
-        updateQueryData();
+        populateVisibleDataFromQuery();
     }
 
     /**
-     * Updates the visible list of imports in the GUI with the latest entries from the database. NOTE: this does not
-     * sync with the database unless the program is not in cache mode.
-     */
-    private void updateImports(){
-        // Get the import data
-        Query<StillFaceImport> importDataQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
-        List<StillFaceImport> importDataList = new ArrayList<>();
-        for (StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery,
-                queryOptions(orderBy(ascending(StillFaceImport.DATE), ascending(StillFaceImport.IMPORT_ID))))) {
-            importDataList.add(data);
-        }
-        listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
-    }
-
-    /**
-     * Restores the GUI view to the way it was when the user first opened the program
-     */
-    private void resetView(){
-        tableData.setItems(null);
-        labelDataTitle.setText("");
-        labelYear.setText("Year:");
-        labelTag.setText("Tag:");
-        labelParticipantID.setText("Participant ID:");
-        labelImportDate.setText("Import Date:");
-        tilePaneSummary.getChildren().clear();
-        buttonExportToCSV.setDisable(true);
-        buttonSaveChanges.setDisable(true);
-        updateImports();
-    }
-
-    /**
-     * Updates the data visible in the GUI data table when an import is selected from the list view.
+     * Populates the data visible list in the model using the import selected from the list view. After the list has
+     * been populated, this method calls notifyObservers() on the model, allowing the view to be updated.
      *
      * @param importID The ID of the import that was selected by the user
      */
-    private void updateData(int importID){
-
-        List<StillFaceData> dataList = StillFaceModel.getInstance().getVisibleDataList();
-
-        PMLogger.getInstance().info("Filling table with import data. Import ID: " + importID);
-
-        dataList.clear();
-
+    private void populateVisibleDataFromImport(int importID){
+        PMLogger.getInstance().info("Populating visible data with import id: " + importID);
+        // First get the import information
         Query<StillFaceImport> importDataQuery = equal(StillFaceImport.IMPORT_ID, importID);
         for(StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery)){
-            labelDataTitle.setText(data.getAlias());
-            labelYear.setText("Year: " + data.getYear());
-            labelTag.setText("Tag: " + data.getTag().getTagValue());
-            labelParticipantID.setText("Participant ID: " + data.getParticipantNumber());
-            labelImportDate.setText("Import Date: " + data.getDate());
+            StillFaceModel.getInstance().setVisibleImport(data);
         }
 
-        // Set up some maps to hold summary data
-        Map<String, Integer> mostCommonCode = new HashMap<>();
-
-        Query<StillFaceData> codeDataQuery = equal(StillFaceData.IMPORT_ID, importID);
-        for(StillFaceData data : StillFaceModel.getInstance().getDataCollection().retrieve(codeDataQuery,
+        // Initialize an empty list to capture the data
+        List<StillFaceData> dataList = new ArrayList<>();
+        Query<StillFaceData> dataQuery = equal(StillFaceData.IMPORT_ID, importID);
+        for(StillFaceData d : StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery,
                 queryOptions(orderBy(ascending(StillFaceData.TIME), ascending(StillFaceData.DATA_ID))))){
-            dataList.add(data);
-
-            // Code stats
-            String codeName = data.getCode().getName();
-            if(mostCommonCode.containsKey(codeName)){
-                int count = mostCommonCode.get(codeName);
-                mostCommonCode.put(codeName, count + 1);
-            }
-            else{
-                mostCommonCode.put(codeName, 1);
-            }
+            dataList.add(d);
         }
 
-        PMLogger.getInstance().info("Table data size: " + StillFaceModel.getInstance().getVisibleDataList().size());
+        // Set the list in the model
+        StillFaceModel.getInstance().setVisibleData(dataList);
 
-        ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
-
-        tableData.setItems(data);
-
-        // Put in some summary data
-        Map.Entry<String, Integer> maxEntry = null;
-        for(Map.Entry<String, Integer> entry : mostCommonCode.entrySet()){
-            if(maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0){
-                maxEntry = entry;
-            }
-        }
-        tilePaneSummary.getChildren().clear();
-        tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
-        tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
-        String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
-        tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
-        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + dataList.get(dataList.size() - 1).getTime()/1000));
-
-        buttonExportToCSV.setDisable(false);
-
+        // Notify this observer and update the view
+        StillFaceModel.getInstance().notifyObservers();
     }
 
     /**
-     * Updates the visible data in the data table based on query parameters specified by the user.
+     * Given search parameters selected by the user, this populates the visible data list in the StillFaceModel
+     * with values matching those parameters. It then notifies the observers of the model that the values
+     * have changed.
      */
-    private void updateQueryData(){
-        List<StillFaceData> dataList = StillFaceModel.getInstance().getVisibleDataList();
-        PMLogger.getInstance().info("Performing search");
+    private void populateVisibleDataFromQuery(){
+        PMLogger.getInstance().info("Populating visible data from search query");
+        // Build the query based on the parameters put in by the user
+        List<StillFaceData> dataList = new ArrayList<>();
         dataList.clear();
         Query<StillFaceImport> importQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
         if(checkBoxYear.isSelected()){
@@ -552,57 +486,18 @@ public class DataCenterController implements Initializable {
         for(StillFaceImport i : StillFaceModel.getInstance().getImportDataCollection().retrieve(importQuery)){
             dataQuery = or(dataQuery, equal(StillFaceData.IMPORT_ID, i.getImportID()));
         }
-        // Set up some maps to hold summary data
-        Map<String, Integer> mostCommonCode = new HashMap<>();
+        // Populate the list
         for(StillFaceData d : StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery,
                 queryOptions(orderBy(ascending(StillFaceData.DATA_ID))))){
             dataList.add(d);
-            // Code stats
-            String codeName = d.getCode().getName();
-            if(mostCommonCode.containsKey(codeName)){
-                int count = mostCommonCode.get(codeName);
-                mostCommonCode.put(codeName, count + 1);
-            }
-            else{
-                mostCommonCode.put(codeName, 1);
-            }
         }
-        PMLogger.getInstance().info("Table data size: " + dataList.size());
-
-        ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
-
-        tableData.setItems(data);
-
-        // Put in some summary data
-        Map.Entry<String, Integer> maxEntry = null;
-        for(Map.Entry<String, Integer> entry : mostCommonCode.entrySet()){
-            if(maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0){
-                maxEntry = entry;
-            }
-        }
-
-        labelDataTitle.setText("Search Results");
-
-        tilePaneSummary.getChildren().clear();
-        tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
-        tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
-        String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
-        tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
-
-        buttonExportToCSV.setDisable(false);
-        labelImportDate.setText("");
-        labelParticipantID.setText("");
-        labelYear.setText("");
-        labelTag.setText("");
+        // Update the values
+        StillFaceModel.getInstance().setVisibleImport(null);
+        StillFaceModel.getInstance().setVisibleData(dataList);
+        // Notify all observers of the changes
+        StillFaceModel.getInstance().notifyObservers();
     }
 
-    /**
-     * Clears any changes made by the user. The changes will not be saved.
-     */
-    private void clearEdits(){
-        StillFaceModel.getInstance().getEditedDataMap().clear();
-        PMLogger.getInstance().info("Edits cleared");
-    }
 
     /**
      * Creates and shows a dialog that allows the user to select what directory they want to export the visible data
@@ -684,5 +579,123 @@ public class DataCenterController implements Initializable {
         });
 
         return dialog.showAndWait();
+    }
+
+    /**
+     * Primary method for updating the view. This controller is registered as an observer with the StillFaceModel
+     * singleton instance. If the notifyObservers() method is called in the model, then this method will fire and
+     * make the appropriate changes to the view based on what it sees in the model.
+     *
+     * @param observable The observable instance that is calling this observer, in this case the StillFaceModel
+     * @param o An object as part of the overridden function, not used in this implementation
+     */
+    @Override
+    public void update(Observable observable, Object o) {
+        if(observable == StillFaceModel.getInstance()){
+            // If there are no items in the edit map, disable the save changes button
+            buttonSaveChanges.setDisable(StillFaceModel.getInstance().getEditedDataMap().isEmpty());
+            // Reset the code list
+            ObservableList<StillFaceCode> observableCodeList = FXCollections.observableArrayList(StillFaceModel.getCodeList());
+            tableColumnCode.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
+            // Refresh the import view
+            updateImports();
+            // Refresh the data view
+            updateData();
+
+        }
+    }
+
+    /**
+     * Updates the visible list of imports in the GUI with the latest entries from the database. This
+     * method is initiated via the Observer pattern with the StillFaceModel.
+     */
+    private void updateImports(){
+        // Get the import data
+        Query<StillFaceImport> importDataQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
+        List<StillFaceImport> importDataList = new ArrayList<>();
+        for (StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery,
+                queryOptions(orderBy(ascending(StillFaceImport.DATE), ascending(StillFaceImport.IMPORT_ID))))) {
+            importDataList.add(data);
+        }
+        listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
+    }
+
+    /**
+     * Updates the visible table of data in the GUI with the populated data in the model. This method is
+     * invoked via the Observer pattern with the StillFaceModel.
+     */
+    private void updateData(){
+
+        List<StillFaceData> dataList = StillFaceModel.getInstance().getVisibleDataList();
+
+        // If the list is empty, clear out the view and return
+        if(dataList.size() == 0){
+            tableData.setItems(null);
+            labelDataTitle.setText("");
+            labelYear.setText("Year:");
+            labelTag.setText("Tag:");
+            labelParticipantID.setText("Participant ID:");
+            labelImportDate.setText("Import Date:");
+            tilePaneSummary.getChildren().clear();
+            buttonExportToCSV.setDisable(true);
+            buttonSaveChanges.setDisable(true);
+            return;
+        }
+
+        PMLogger.getInstance().info("Filling table with visible data");
+
+        // Set the labels in the header
+        StillFaceImport visibleImport = StillFaceModel.getInstance().getVisibleImport();
+        String dataTitle = (visibleImport != null) ? visibleImport.getAlias() : "Search Results";
+        String year = "Year: " + ((visibleImport != null) ? visibleImport.getYear() : "");
+        String tag = "Tag: " + ((visibleImport != null) ? visibleImport.getTag().getTagValue() : "");
+        String pid = "Participant ID: " + ((visibleImport != null) ? visibleImport.getParticipantNumber() : "");
+        String date = "Import Date: " + ((visibleImport != null) ? visibleImport.getDate().toString() : "");
+        labelDataTitle.setText(dataTitle);
+        labelYear.setText(year);
+        labelTag.setText(tag);
+        labelParticipantID.setText(pid);
+        labelImportDate.setText(date);
+
+        // Set up some maps to hold summary data
+        Map<String, Integer> mostCommonCode = new HashMap<>();
+
+        // Collect the summary data
+        for(StillFaceData data : dataList){
+            dataList.add(data);
+
+            // Code stats
+            String codeName = data.getCode().getName();
+            if(mostCommonCode.containsKey(codeName)){
+                int count = mostCommonCode.get(codeName);
+                mostCommonCode.put(codeName, count + 1);
+            }
+            else{
+                mostCommonCode.put(codeName, 1);
+            }
+        }
+
+        PMLogger.getInstance().info("Table data size: " + StillFaceModel.getInstance().getVisibleDataList().size());
+
+        // Set the items in the view
+        ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
+        tableData.setItems(data);
+
+        // Put in some summary data
+        Map.Entry<String, Integer> maxEntry = null;
+        for(Map.Entry<String, Integer> entry : mostCommonCode.entrySet()){
+            if(maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0){
+                maxEntry = entry;
+            }
+        }
+        tilePaneSummary.getChildren().clear();
+        tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
+        tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
+        String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
+        tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
+        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + dataList.get(dataList.size() - 1).getTime()/1000));
+
+        buttonExportToCSV.setDisable(false);
+
     }
 }

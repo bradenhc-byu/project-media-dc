@@ -5,13 +5,7 @@ import com.byu.pmedia.database.DatabaseMode;
 import com.byu.pmedia.database.StillFaceDatabaseInitializer;
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceModel;
-import com.byu.pmedia.util.ErrorCode;
-import javafx.geometry.Insets;
-import javafx.scene.control.Alert;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
-import javax.swing.*;
 import java.awt.*;
 
 public class DataCenterSplashScreen {
@@ -42,22 +36,30 @@ public class DataCenterSplashScreen {
         fakeWait(1500);
         renderSplashFrame(g, 100, "Loading configuration...");
         splash.update();
-        StillFaceConfig.getInstance().initialize("projectmedia.datacenter.config");
+        boolean success = StillFaceConfig.getInstance().initialize("projectmedia.datacenter.config");
+        if(!success){
+            String message = "We encountered an error while trying to initialize configuration the database connection. " +
+                    "Please check your connection and database settings and try again.";
+            exitOnError(message);
+        }
         renderSplashFrame(g, 300, "Establishing database connection...");
         splash.update();
         DatabaseMode mode = DatabaseMode.valueOf(StillFaceConfig.getInstance().getAsString("database.mode"));
         StillFaceDatabaseInitializer initializer = new StillFaceDatabaseInitializer();
-        boolean success = initializer.initialize(mode);
+        success = initializer.initialize(mode);
         if(!success){
             String message = "We encountered an error while trying to establish the database connection. " +
                     "Please check your connection and database settings and try again.";
-            new StillFaceErrorNotification(message).show();
-            splash.close();
-            System.exit(ErrorCode.DB_CONNECT_FAILURE);
+            exitOnError(message);
         }
         renderSplashFrame(g, 440, "Loading data and initializing model...");
         splash.update();
-        StillFaceModel.getInstance().initialize(initializer.getDAO());
+        success = StillFaceModel.getInstance().initialize(initializer.getDAO());
+        if(!success){
+            String message = "We encountered an error while trying to initialize the internal model. " +
+                    "Please check the log messages try again.";
+            exitOnError(message);
+        }
         renderSplashFrame(g, 580, "Loading GUI Components...");
         splash.update();
         fakeWait(900);
@@ -71,6 +73,11 @@ public class DataCenterSplashScreen {
         catch(InterruptedException e){
             e.printStackTrace();
         }
+    }
+
+    private void exitOnError(String message){
+        new StillFaceErrorNotification(message).show();
+        System.exit(1);
     }
 
 }

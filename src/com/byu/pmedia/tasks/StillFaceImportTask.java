@@ -65,6 +65,7 @@ public class StillFaceImportTask implements IStillFaceTask {
             }
             StillFaceModel.getInstance().refreshImportData();
             StillFaceModel.getInstance().refreshCodeData();
+            StillFaceModel.getInstance().notifyObservers();
         }
         else{
             PMLogger.getInstance().error("Unable to insert data into database");
