@@ -19,6 +19,7 @@ import com.byu.pmedia.model.*;
 import com.byu.pmedia.view.ConfirmAction;
 import com.byu.pmedia.view.StillFaceConfirmNotification;
 import com.byu.pmedia.view.StillFaceErrorNotification;
+import com.byu.pmedia.view.StillFaceWarningNotification;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.resultset.ResultSet;
 import javafx.beans.value.ChangeListener;
@@ -34,15 +35,14 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
-public class SettingsController implements Initializable {
+public class SettingsController implements Initializable, Observer {
 
+    @FXML private ChoiceBox choiceBoxFirstCode;
+    @FXML private ChoiceBox choiceBoxSecondCode;
     @FXML private Button buttonDeleteCode;
     @FXML private Button buttonDeleteTag;
     @FXML private TabPane tabPaneSettings;
@@ -201,6 +201,33 @@ public class SettingsController implements Initializable {
                 }
             }
         });
+
+        // Now setup the code delimiter choice boxes
+        choiceBoxFirstCode.setItems(FXCollections.observableList(StillFaceModel.getCodeList()));
+        StillFaceCode c = retrieveCodeWithIndex(1);
+        choiceBoxFirstCode.getSelectionModel().select(c);
+        choiceBoxFirstCode.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceCode>() {
+            @Override
+            public void changed(ObservableValue observableValue, StillFaceCode oldCode, StillFaceCode newCode) {
+                if(newCode != null){
+                    setCodeDelimiter(newCode, 1);
+                }
+            }
+        });
+        choiceBoxSecondCode.setItems(FXCollections.observableList(StillFaceModel.getCodeList()));
+        c = retrieveCodeWithIndex(2);
+        choiceBoxSecondCode.getSelectionModel().select(c);
+        choiceBoxSecondCode.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceCode>() {
+            @Override
+            public void changed(ObservableValue observableValue, StillFaceCode oldCode, StillFaceCode newCode) {
+                if(newCode != null){
+                    setCodeDelimiter(newCode, 2);
+                }
+            }
+        });
+
+        // Everything has been initialized, register as an observer
+        StillFaceModel.getInstance().addObserver(this);
     }
 
     @FXML
@@ -274,7 +301,7 @@ public class SettingsController implements Initializable {
                 StillFaceModel.getInstance().refreshCodes();
             }
         });
-        updateCodes();
+        StillFaceModel.getInstance().notifyObservers();
     }
 
     @FXML
@@ -297,12 +324,20 @@ public class SettingsController implements Initializable {
                 StillFaceModel.getInstance().refreshTags();
             }
         });
-        updateTags();
+        StillFaceModel.getInstance().notifyObservers();
     }
 
     @FXML
     private void onDeleteCode(ActionEvent actionEvent) {
         StillFaceCode codeToDelete = (StillFaceCode)tableViewCodes.getSelectionModel().getSelectedItem();
+        // If this code is the selected delimiter, don't allow the user to delete it
+        if(codeToDelete.equals(choiceBoxFirstCode.getSelectionModel().getSelectedItem())
+                || codeToDelete.equals(choiceBoxSecondCode.getSelectionModel().getSelectedItem())){
+            String message = "The code you have selected to delete is currently one of the selected delimiter codes. " +
+                    "Please replace this code with a new delimiter before deleting it.";
+            new StillFaceWarningNotification(message).show();
+            return;
+        }
         // If there are data entries that have this code, make the user select another code to replace them with
         Query<StillFaceData> dataQuery = equal(StillFaceData.CODE, codeToDelete);
         ResultSet<StillFaceData> resultCodeData = StillFaceModel.getInstance().getDataCollection().retrieve(dataQuery);
@@ -334,8 +369,7 @@ public class SettingsController implements Initializable {
         // Delete the old code
         dao.deleteExistingCode(codeToDelete);
         StillFaceModel.getInstance().refreshCodes();
-        updateCodes();
-        buttonDeleteCode.setDisable(true);
+        StillFaceModel.getInstance().notifyObservers();
     }
 
     @FXML
@@ -375,8 +409,18 @@ public class SettingsController implements Initializable {
         // Delete the old code
         dao.deleteExistingTag(tagToDelete);
         StillFaceModel.getInstance().refreshTags();
-        updateTags();
-        buttonDeleteTag.setDisable(true);
+        StillFaceModel.getInstance().notifyObservers();
+    }
+
+
+    @Override
+    public void update(Observable observable, Object o) {
+        if(observable == StillFaceModel.getInstance()){
+            updateCodes();
+            updateTags();
+            buttonDeleteTag.setDisable(true);
+            buttonDeleteCode.setDisable(true);
+        }
     }
 
     private void updateCodes(){
@@ -385,5 +429,26 @@ public class SettingsController implements Initializable {
 
     private void updateTags(){
         tableViewTags.setItems(FXCollections.observableArrayList(StillFaceModel.getTagList()));
+    }
+
+    private void setCodeDelimiter(StillFaceCode code, int index){
+        StillFaceCode c = retrieveCodeWithIndex(index);
+        if(c != null){
+            c.setDelimiterIndex(0);
+            dao.updateExistingCode(c);
+        }
+        code.setDelimiterIndex(index);
+        dao.updateExistingCode(code);
+        StillFaceModel.getInstance().refreshCodes();
+        StillFaceModel.getInstance().notifyObservers();
+    }
+
+    private StillFaceCode retrieveCodeWithIndex(int index){
+        Query<StillFaceCode> query = equal(StillFaceCode.DELIMITER_INDEX, index);
+        StillFaceCode code = null;
+        for(StillFaceCode c : StillFaceModel.getInstance().getCodeCollection().retrieve(query)){
+            code = c;
+        }
+        return code;
     }
 }

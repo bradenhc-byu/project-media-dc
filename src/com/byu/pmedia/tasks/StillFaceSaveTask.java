@@ -50,7 +50,7 @@ public class StillFaceSaveTask implements IStillFaceTask {
                     throw new Exception("Failed to update data in database. See log for more details.");
                 }
             }
-            dataMap.clear();
+            StillFaceModel.getInstance().clearEdits();
             StillFaceModel.getInstance().refreshCodeData();
         }
     }

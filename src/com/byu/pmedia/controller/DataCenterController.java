@@ -13,15 +13,13 @@ package com.byu.pmedia.controller;
 
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.*;
-import com.byu.pmedia.tasks.StillFaceExportTask;
-import com.byu.pmedia.tasks.StillFaceSaveTask;
-import com.byu.pmedia.tasks.StillFaceSyncTask;
-import com.byu.pmedia.tasks.StillFaceTaskCallback;
+import com.byu.pmedia.tasks.*;
 import com.byu.pmedia.util.NumericTextFieldTableCell;
 import com.byu.pmedia.view.ConfirmAction;
 import com.byu.pmedia.view.StillFaceConfirmNotification;
 import com.byu.pmedia.view.StillFaceErrorNotification;
 import com.googlecode.cqengine.query.Query;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -100,6 +98,10 @@ public class DataCenterController implements Initializable, Observer {
     @FXML private Label labelDataTitle;
     @FXML private TilePane tilePaneSummary;
     @FXML private TableView tableData;
+    @FXML private TableView tableViewBeforeStillFace;
+    @FXML private TableView tableViewAfterStillFace;
+    @FXML private TableView tableViewAfterReconciliation;
+    @FXML private Button buttonDeleteImport;
 
     // Initialize the table columns here, so that they can be accessed throughout the class
     private TableColumn tableColumnID = new TableColumn("ID");
@@ -119,6 +121,8 @@ public class DataCenterController implements Initializable, Observer {
 
         initializeDataTable();
 
+        initializeSummaryTables();
+
         initializeSearchTab();
 
         // Setup miscellaneous FXML element properties
@@ -130,17 +134,19 @@ public class DataCenterController implements Initializable, Observer {
         buttonSaveChanges.setDisable(true);
         buttonExportToCSV.setDisable(true);
 
-        // Setup miscellaneous listeners
+        // Setup import list view listener
         listViewExplorer.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceImport>() {
             @Override
             public void changed(ObservableValue<? extends StillFaceImport> observable,
                                 StillFaceImport oldValue, StillFaceImport newValue) {
                 if(newValue != null){
+                    PMLogger.getInstance().debug("Detected list view item change");
                     populateVisibleDataFromImport(newValue.getImportID());
                 }
 
             }
         });
+        // Start with a list of available imports
         updateImports();
 
         // Everything is set up, now register with the observer
@@ -243,6 +249,44 @@ public class DataCenterController implements Initializable, Observer {
         tableData.setEditable(true);
         tableData.getColumns().addAll(tableColumnID, tableColumnTime, tableColumnDuration, tableColumnCode,
                 tableColumnComment);
+    }
+
+    /**
+     * This sets up the columns and properties of the three tables that will show summative code count data for
+     * the video data currently visible to the user
+     */
+    private void initializeSummaryTables(){
+        // Setup the immutable table columns
+        TableColumn tableColStillFaceCodeName = new TableColumn("Code");
+        tableColStillFaceCodeName.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, String>("name"));
+        tableColStillFaceCodeName.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.90));
+
+        TableColumn tableColStillFaceCount = new TableColumn("Count");
+        tableColStillFaceCount.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, Integer>("count"));
+        tableColStillFaceCount.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.10));
+
+        TableColumn tableColStillFaceCodeName2 = new TableColumn("Code");
+        tableColStillFaceCodeName2.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, String>("name"));
+        tableColStillFaceCodeName2.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.90));
+
+        TableColumn tableColStillFaceCount2 = new TableColumn("Count");
+        tableColStillFaceCount2.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, Integer>("count"));
+        tableColStillFaceCount2.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.10));
+
+        TableColumn tableColStillFaceCodeName3 = new TableColumn("Code");
+        tableColStillFaceCodeName3.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, String>("name"));
+        tableColStillFaceCodeName3.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.90));
+
+        TableColumn tableColStillFaceCount3 = new TableColumn("Count");
+        tableColStillFaceCount3.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, Integer>("count"));
+        tableColStillFaceCount3.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.10));
+
+        tableViewBeforeStillFace.getColumns().setAll(tableColStillFaceCodeName, tableColStillFaceCount);
+        tableViewAfterStillFace.getColumns().setAll(tableColStillFaceCodeName2, tableColStillFaceCount2);
+        tableViewAfterReconciliation.getColumns().setAll(tableColStillFaceCodeName3, tableColStillFaceCount3);
+        tableViewBeforeStillFace.setEditable(false);
+        tableViewAfterStillFace.setEditable(false);
+        tableViewAfterReconciliation.setEditable(false);
     }
 
     /**
@@ -431,6 +475,40 @@ public class DataCenterController implements Initializable, Observer {
     }
 
     /**
+     * Handler for a user action on the Delete button when viewing an import. This action will attempt to delete the
+     * import record and all associated data entries in the database
+     *
+     * @param actionEvent The event the listener detected
+     */
+    @FXML
+    private void onDeleteImport(ActionEvent actionEvent) {
+        StillFaceImport importToDelete = (StillFaceImport)listViewExplorer.getSelectionModel().getSelectedItem();
+        new StillFaceConfirmNotification("Are you sure you want to delete " + importToDelete.getAlias() +"?",
+                new ConfirmAction() {
+                    @Override
+                    public void onOK() {
+                        new StillFaceDeleteImportTask(importToDelete, new StillFaceTaskCallback() {
+                            @Override
+                            public void onSuccess() {
+                                StillFaceModel.getInstance().refresh();
+                                StillFaceModel.getInstance().notifyObservers();
+                            }
+
+                            @Override
+                            public void onFail(Throwable exception) {
+                                new StillFaceErrorNotification("Unable to successfully delete import. See log for details.").show();
+                            }
+                        }).execute();
+                    }
+
+                    @Override
+                    public void onCancel() {
+
+                    }
+                });
+    }
+
+    /**
      * Populates the data visible list in the model using the import selected from the list view. After the list has
      * been populated, this method calls notifyObservers() on the model, allowing the view to be updated.
      *
@@ -452,6 +530,8 @@ public class DataCenterController implements Initializable, Observer {
             dataList.add(d);
         }
 
+        PMLogger.getInstance().info("Initialized visible data list: " + dataList.size() + " elements");
+
         // Set the list in the model
         StillFaceModel.getInstance().setVisibleData(dataList);
 
@@ -468,18 +548,17 @@ public class DataCenterController implements Initializable, Observer {
         PMLogger.getInstance().info("Populating visible data from search query");
         // Build the query based on the parameters put in by the user
         List<StillFaceData> dataList = new ArrayList<>();
-        dataList.clear();
         Query<StillFaceImport> importQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
-        if(checkBoxYear.isSelected()){
+        if(checkBoxYear.isSelected() && !textFieldYear.getText().isEmpty()){
             importQuery = and(importQuery, equal(StillFaceImport.YEAR, Integer.parseInt(textFieldYear.getText())));
         }
-        if(checkBoxFamilyID.isSelected()){
+        if(checkBoxFamilyID.isSelected() && !textFieldFamilyID.getText().isEmpty()){
             importQuery = and(importQuery, equal(StillFaceImport.FAMILY_ID, Integer.parseInt(textFieldFamilyID.getText())));
         }
-        if(checkBoxParticipantID.isSelected()){
+        if(checkBoxParticipantID.isSelected() && !textFieldParticipantID.getText().isEmpty()){
             importQuery = and(importQuery, equal(StillFaceImport.PARTICIPANT_ID, Integer.parseInt(textFieldParticipantID.getText())));
         }
-        if(checkBoxTag.isSelected()){
+        if(checkBoxTag.isSelected() && choiceBoxTag.getSelectionModel().getSelectedItem() != null){
             importQuery = and(importQuery, equal(StillFaceImport.TAG, choiceBoxTag.getValue()));
         }
         Query<StillFaceData> dataQuery = equal(StillFaceData.DATA_ID, Integer.MAX_VALUE);
@@ -491,6 +570,7 @@ public class DataCenterController implements Initializable, Observer {
                 queryOptions(orderBy(ascending(StillFaceData.DATA_ID))))){
             dataList.add(d);
         }
+        PMLogger.getInstance().info("Initialized visible data list: " + dataList.size() + " elements");
         // Update the values
         StillFaceModel.getInstance().setVisibleImport(null);
         StillFaceModel.getInstance().setVisibleData(dataList);
@@ -597,6 +677,8 @@ public class DataCenterController implements Initializable, Observer {
             // Reset the code list
             ObservableList<StillFaceCode> observableCodeList = FXCollections.observableArrayList(StillFaceModel.getCodeList());
             tableColumnCode.setCellFactory(ChoiceBoxTableCell.forTableColumn(observableCodeList));
+            // Set the tags list in the query section
+            choiceBoxTag.setItems(FXCollections.observableList(StillFaceModel.getTagList()));
             // Refresh the import view
             updateImports();
             // Refresh the data view
@@ -611,13 +693,21 @@ public class DataCenterController implements Initializable, Observer {
      */
     private void updateImports(){
         // Get the import data
+        PMLogger.getInstance().debug("Updating the import list view");
         Query<StillFaceImport> importDataQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
         List<StillFaceImport> importDataList = new ArrayList<>();
         for (StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery,
                 queryOptions(orderBy(ascending(StillFaceImport.DATE), ascending(StillFaceImport.IMPORT_ID))))) {
             importDataList.add(data);
         }
-        listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
+        if(importDataList.size() > listViewExplorer.getItems().size() || importDataList.size() < listViewExplorer.getItems().size()){
+            PMLogger.getInstance().debug("Import list view size: " + importDataList.size());
+            Platform.runLater(() -> {
+                int i = listViewExplorer.getSelectionModel().getSelectedIndex();
+                listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
+                listViewExplorer.getFocusModel().focus(i);
+            });
+        }
     }
 
     /**
@@ -630,15 +720,17 @@ public class DataCenterController implements Initializable, Observer {
 
         // If the list is empty, clear out the view and return
         if(dataList.size() == 0){
-            tableData.setItems(null);
-            labelDataTitle.setText("");
-            labelYear.setText("Year:");
-            labelTag.setText("Tag:");
-            labelParticipantID.setText("Participant ID:");
-            labelImportDate.setText("Import Date:");
-            tilePaneSummary.getChildren().clear();
-            buttonExportToCSV.setDisable(true);
-            buttonSaveChanges.setDisable(true);
+            Platform.runLater(() -> {
+                tableData.setItems(null);
+                labelDataTitle.setText("");
+                labelYear.setText("Year:");
+                labelTag.setText("Tag:");
+                labelParticipantID.setText("Participant ID:");
+                labelImportDate.setText("Import Date:");
+                tilePaneSummary.getChildren().clear();
+                buttonExportToCSV.setDisable(true);
+                buttonSaveChanges.setDisable(true);
+            });
             return;
         }
 
@@ -651,21 +743,28 @@ public class DataCenterController implements Initializable, Observer {
         String tag = "Tag: " + ((visibleImport != null) ? visibleImport.getTag().getTagValue() : "");
         String pid = "Participant ID: " + ((visibleImport != null) ? visibleImport.getParticipantNumber() : "");
         String date = "Import Date: " + ((visibleImport != null) ? visibleImport.getDate().toString() : "");
-        labelDataTitle.setText(dataTitle);
-        labelYear.setText(year);
-        labelTag.setText(tag);
-        labelParticipantID.setText(pid);
-        labelImportDate.setText(date);
+        Platform.runLater(() -> {
+            labelDataTitle.setText(dataTitle);
+            labelYear.setText(year);
+            labelTag.setText(tag);
+            labelParticipantID.setText(pid);
+            labelImportDate.setText(date);
+        });
 
         // Set up some maps to hold summary data
         Map<String, Integer> mostCommonCode = new HashMap<>();
+        Map<String, Integer> mostCommonCodeFirst = new HashMap<>();
+        Map<String, Integer> mostCommonCodeSecond= new HashMap<>();
+        Map<String, Integer> mostCommonCodeThird = new HashMap<>();
 
         // Collect the summary data
+        int delimiterIndex = 0;
         for(StillFaceData data : dataList){
-            dataList.add(data);
-
             // Code stats
             String codeName = data.getCode().getName();
+            if(data.getCode().getDelimiterIndex() > delimiterIndex){
+                delimiterIndex++;
+            }
             if(mostCommonCode.containsKey(codeName)){
                 int count = mostCommonCode.get(codeName);
                 mostCommonCode.put(codeName, count + 1);
@@ -673,6 +772,41 @@ public class DataCenterController implements Initializable, Observer {
             else{
                 mostCommonCode.put(codeName, 1);
             }
+            // Get the common code counts for each video segment
+            switch(delimiterIndex){
+                case 0:
+                    if(mostCommonCodeFirst.containsKey(codeName)){
+                        int count = mostCommonCodeFirst.get(codeName);
+                        mostCommonCodeFirst.put(codeName, count + 1);
+                    }
+                    else{
+                        mostCommonCodeFirst.put(codeName, 1);
+                    }
+                    break;
+
+                case 1:
+                    if(mostCommonCodeSecond.containsKey(codeName)){
+                        int count = mostCommonCodeSecond.get(codeName);
+                        mostCommonCodeSecond.put(codeName, count + 1);
+                    }
+                    else{
+                        mostCommonCodeSecond.put(codeName, 1);
+                    }
+                    break;
+
+                case 2:
+                    if(mostCommonCodeThird.containsKey(codeName)){
+                        int count = mostCommonCodeThird.get(codeName);
+                        mostCommonCodeThird.put(codeName, count + 1);
+                    }
+                    else{
+                        mostCommonCodeThird.put(codeName, 1);
+                    }
+                    break;
+
+
+            }
+
         }
 
         PMLogger.getInstance().info("Table data size: " + StillFaceModel.getInstance().getVisibleDataList().size());
@@ -681,6 +815,7 @@ public class DataCenterController implements Initializable, Observer {
         ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
         tableData.setItems(data);
 
+        PMLogger.getInstance().debug("Gathering summary data");
         // Put in some summary data
         Map.Entry<String, Integer> maxEntry = null;
         for(Map.Entry<String, Integer> entry : mostCommonCode.entrySet()){
@@ -688,14 +823,85 @@ public class DataCenterController implements Initializable, Observer {
                 maxEntry = entry;
             }
         }
-        tilePaneSummary.getChildren().clear();
-        tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
-        tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
+        List<StillFaceCodeCounts> firstCounts = new ArrayList<>();
+        List<StillFaceCodeCounts> secondCounts = new ArrayList<>();
+        List<StillFaceCodeCounts> thirdCounts = new ArrayList<>();
+        for(Map.Entry<String, Integer> entry : mostCommonCodeFirst.entrySet()){
+            firstCounts.add(new StillFaceCodeCounts(entry.getKey(), entry.getValue()));
+        }
+        for(Map.Entry<String, Integer> entry : mostCommonCodeSecond.entrySet()){
+            secondCounts.add(new StillFaceCodeCounts(entry.getKey(), entry.getValue()));
+        }
+        for(Map.Entry<String, Integer> entry : mostCommonCodeThird.entrySet()){
+            thirdCounts.add(new StillFaceCodeCounts(entry.getKey(), entry.getValue()));
+        }
+        Collections.sort(firstCounts);
+        Collections.sort(secondCounts);
+        Collections.sort(thirdCounts);
+        tableViewBeforeStillFace.setItems(FXCollections.observableList(firstCounts));
+        tableViewAfterStillFace.setItems(FXCollections.observableList(secondCounts));
+        tableViewAfterReconciliation.setItems(FXCollections.observableList(thirdCounts));
         String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
-        tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
-        tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + dataList.get(dataList.size() - 1).getTime()/1000));
+        Platform.runLater(()->{
+            tilePaneSummary.getChildren().clear();
+            tilePaneSummary.getChildren().add(new Text("Number of codes: " + dataList.size()));
+            tilePaneSummary.getChildren().add(new Text("Codes used: " + mostCommonCode.keySet().size()));
+            tilePaneSummary.getChildren().add(new Text("Most common code: " + mostCommon ));
+            tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + dataList.get(dataList.size() - 1).getTime()/1000));
 
-        buttonExportToCSV.setDisable(false);
+            buttonExportToCSV.setDisable(false);
+        });
+
+
+        PMLogger.getInstance().debug("Finished updating table data");
 
     }
+
+
+    /**
+     * Inner-class that holds information about StillFaceCodes and their counts within a dataset. This is a
+     * necessary wrapper for filling the three JavaFX TableViews that hold summative code information.
+     * @author Braden Hitchcock
+     */
+    public class StillFaceCodeCounts implements Comparable<StillFaceCodeCounts>{
+
+        /* Holds the name of the Code */
+        private String name;
+        /* Holds the number of occurrences of the code in the dataset*/
+        private int count;
+
+        /**
+         * Constructor for a StillFaceCodeCount object. Creates a new instance.
+         *
+         * @param name The name of the code
+         * @param count The number of occurances of the code
+         */
+        public StillFaceCodeCounts(String name, int count) {
+            this.name = name;
+            this.count = count;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        /**
+         * Allows a collection of StillFaceCodeCount objects to be sorted in descending order
+         *
+         * @param stillFaceCodeCounts The object to compare this object to
+         * @return 0 if the two are equal, greater than one if this object's counts are less than the
+         *         comparison object, and less than one if this object's counts are greater than the
+         *         comparison object
+         */
+        @Override
+        public int compareTo(StillFaceCodeCounts stillFaceCodeCounts) {
+            int compareCount = stillFaceCodeCounts.getCount();
+            return compareCount - this.count;
+        }
+    }
+
 }

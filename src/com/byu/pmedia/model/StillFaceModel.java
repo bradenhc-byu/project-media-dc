@@ -146,7 +146,7 @@ public class StillFaceModel extends Observable {
 
     public void setVisibleData(List<StillFaceData> data){
         visibleDataList = data;
-        notifyObservers();
+        setChanged();
     }
 
     public StillFaceImport getVisibleImport() {
@@ -155,12 +155,19 @@ public class StillFaceModel extends Observable {
 
     public void setVisibleImport(StillFaceImport importData){
         this.visibleImport = importData;
+        setChanged();
     }
 
     public Map<Integer, StillFaceData> getEditedDataMap(){ return editedDataMap; }
 
     public void addEditedData(StillFaceData data){
         editedDataMap.put(data.getDataID(), data);
+        setChanged();
+    }
+
+    public void clearEdits(){
+        editedDataMap.clear();
+        setChanged();
     }
 
     public boolean refreshImportData(){
@@ -168,10 +175,11 @@ public class StillFaceModel extends Observable {
             IndexedCollection<StillFaceImport> tmpCollection = this.dao.getImportData(0);
             if(tmpCollection != null) {
                 this.importDataCollection = tmpCollection;
+                setChanged();
                 return true;
             }
         }
-        PMLogger.getInstance().warn("Failed to refresh import data: database connection or not cached");
+        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh imports");
         return !this.cached;
     }
 
@@ -180,11 +188,12 @@ public class StillFaceModel extends Observable {
             IndexedCollection<StillFaceData> tmpCollection = this.dao.getCodeDataFromImport(0);
             if(tmpCollection != null){
                 this.dataCollection = tmpCollection;
+                setChanged();
                 return true;
             }
 
         }
-        PMLogger.getInstance().warn("Failed to refresh coded video data data: database connection or not cached");
+        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh data");
         return !this.cached;
     }
 
@@ -194,10 +203,11 @@ public class StillFaceModel extends Observable {
             if(tmpCollection != null) {
                 this.codeCollection = tmpCollection;
                 populateCodeList();
+                setChanged();
                 return true;
             }
         }
-        PMLogger.getInstance().warn("Failed to refresh codes: database connection or not cached");
+        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh codes");
         return !this.cached;
     }
 
@@ -207,39 +217,53 @@ public class StillFaceModel extends Observable {
             if(tmpCollection != null){
                 this.tagCollection = tmpCollection;
                 populateTagList();
-                return !this.cached;
+                setChanged();
+                return true;
             }
         }
-        PMLogger.getInstance().warn("Failed to refresh tags: database connection or not cached");
-        return false;
+        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh tags");
+        return !this.cached;
     }
 
     public boolean refresh(){
         this.editedDataMap.clear();
         this.visibleImport = null;
         this.visibleDataList.clear();
+        setChanged();
         return refreshImportData() && refreshCodeData() && refreshCodes() && refreshTags();
     }
 
     private void populateCodeList(){
         if(initialized) {
             codeList.clear();
+            IndexedCollection<StillFaceCode> codeCollection = (this.cached) ? this.codeCollection : this.dao.getCode(0);
             Query<StillFaceCode> query = not(equal(StillFaceCode.CODE_ID, 0));
-            for (StillFaceCode c : this.codeCollection.retrieve(query,
+            for (StillFaceCode c : codeCollection.retrieve(query,
                     queryOptions(orderBy(ascending(StillFaceCode.NAME))))) {
                 codeList.add(c);
             }
+            setChanged();
         }
     }
 
     private void populateTagList(){
         if(initialized) {
             tagList.clear();
+            IndexedCollection<StillFaceTag> tagCollection = (this.cached) ? this.tagCollection : this.dao.getTag(0);
             Query<StillFaceTag> query = not(equal(StillFaceTag.TAG_ID, 0));
-            for (StillFaceTag t : this.tagCollection.retrieve(query,
+            for (StillFaceTag t : tagCollection.retrieve(query,
                     queryOptions(orderBy(ascending(StillFaceTag.TAG_VALUE))))) {
                 tagList.add(t);
             }
+            setChanged();
         }
+    }
+
+    public void lockDatabaseConnection(){
+        this.dao.lockConnection();
+    }
+
+    public void unlockDatabaseConnection(){
+        this.dao.unlockConnection();
     }
 }

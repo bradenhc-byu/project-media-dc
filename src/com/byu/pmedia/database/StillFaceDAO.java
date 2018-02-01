@@ -187,7 +187,7 @@ public class StillFaceDAO {
      *
      * @param importID The ID associated with entries to remove from the database
      */
-    public void cleanImportData(int importID){
+    public boolean cleanImportData(int importID){
         String queryI = this.queryBuilder.buildDeleteImport(importID);
         String queryD = this.queryBuilder.buildDeleteCodeDataFromImport(importID);
         // Execute the query
@@ -198,9 +198,11 @@ public class StillFaceDAO {
             statement = this.databaseConnection.getConnection().prepareStatement(queryD);
             statement.executeUpdate();
             this.closeConnection();
+            return true;
         }
         catch(SQLException e){
             PMLogger.getInstance().error("Unable to update import data: " + e.getMessage());
+            return false;
         }
     }
 
@@ -216,6 +218,7 @@ public class StillFaceDAO {
         // Verify the code (cid) is valid. If not create a new entry
         boolean exists = false;
         Query<StillFaceCode> codeQuery = equal(StillFaceCode.NAME, data.getCode().getName());
+        StillFaceModel.getInstance().lockDatabaseConnection();
         for(StillFaceCode code : StillFaceModel.getInstance().getCodeCollection().retrieve(codeQuery)){
             exists = true;
             data.getCode().setCodeID(code.getCodeID());
@@ -228,9 +231,9 @@ public class StillFaceDAO {
                 PMLogger.getInstance().error("Failed to create new code entry for unknown code");
                 return -1;
             }
-            StillFaceModel.getInstance().refreshCodes();
             data.getCode().setCodeID(key);
         }
+        StillFaceModel.getInstance().unlockDatabaseConnection();
 
         // Create the query
         String query = this.queryBuilder.buildInsertCodeData(data);
@@ -290,8 +293,9 @@ public class StillFaceDAO {
                 int codeID = resultSet.getInt("cid");
                 String comment = resultSet.getString("comment");
                 String codeName = resultSet.getString("name");
+                int codeDelimiter = resultSet.getInt("delimiter");
                 dataCollection.add(new StillFaceData(dataID, iid, time, duration,
-                        new StillFaceCode(codeID, codeName), comment));
+                        new StillFaceCode(codeID, codeName, codeDelimiter), comment));
             }
             this.closeConnection();
             return dataCollection;
@@ -337,8 +341,9 @@ public class StillFaceDAO {
                 int codeID = resultSet.getInt("cid");
                 String comment = resultSet.getString("comment");
                 String codeName = resultSet.getString("name");
+                int codeDelimiter = resultSet.getInt("delimiter");
                 dataCollection.add(new StillFaceData(dataID, iid, time, duration,
-                        new StillFaceCode(codeID, codeName), comment));
+                        new StillFaceCode(codeID, codeName, codeDelimiter), comment));
             }
             this.closeConnection();
             return dataCollection;
@@ -430,7 +435,8 @@ public class StillFaceDAO {
             while(resultSet.next()){
                 int cid = resultSet.getInt("cid");
                 String name = resultSet.getString("name");
-                codeCollection.add(new StillFaceCode(cid, name));
+                int delimiter = resultSet.getInt("delimiter");
+                codeCollection.add(new StillFaceCode(cid, name, delimiter));
             }
             this.closeConnection();
             return codeCollection;
@@ -612,8 +618,8 @@ public class StillFaceDAO {
         // Initialize all the queries
         String createImportTableQuery = this.queryBuilder.buildCreateSFImportTable(mode);
         String createDataTableQuery = this.queryBuilder.buildCreateSFDataTable(mode);
-        //String createCodeTableQuery = this.queryBuilder.buildCreateSFCodesTable(mode);
-        //String createTagTableQuery = this.queryBuilder.buildCreateSFTagsTable(mode);
+        String createCodeTableQuery = this.queryBuilder.buildCreateSFCodesTable(mode);
+        String createTagTableQuery = this.queryBuilder.buildCreateSFTagsTable(mode);
 
         // Execute the queries
         try{
@@ -621,8 +627,8 @@ public class StillFaceDAO {
             Statement statement = this.databaseConnection.getConnection().createStatement();
             statement.executeUpdate(createImportTableQuery);
             statement.executeUpdate(createDataTableQuery);
-            //statement.executeUpdate(createCodeTableQuery);
-            //statement.executeUpdate(createTagTableQuery);
+            statement.executeUpdate(createCodeTableQuery);
+            statement.executeUpdate(createTagTableQuery);
             this.closeConnection();
             return true;
         }

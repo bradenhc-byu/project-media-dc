@@ -114,6 +114,14 @@ public class StillFaceImport {
     }
 
     @Override
+    public boolean equals(Object o){
+        if(o == null || o.getClass() != this.getClass()) return false;
+        StillFaceImport sfImport = (StillFaceImport)o;
+        if(sfImport.getImportID() != this.getImportID()) return false;
+        return true;
+    }
+
+    @Override
     public String toString(){
         return String.format("(%s): %s", alias, filename);
     }

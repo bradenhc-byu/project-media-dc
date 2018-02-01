@@ -41,11 +41,8 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
         this.connectionEstablished = false;
         try{
             this.connection = DriverManager.getConnection(this.url);
-            String schema = this.connection.getSchema();
 
             PMLogger.getInstance().info("Database connection successful");
-            PMLogger.getInstance().debug("Connection schema: " + schema);
-
         }
         catch(SQLException e){
             PMLogger.getInstance().error("Failed to establish database connection, SQL error code: " + e.getErrorCode());
@@ -53,7 +50,6 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
             throw e;
         }
         this.connectionEstablished = true;
-
         return true;
     }
 
@@ -68,7 +64,6 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
             e.printStackTrace();
             throw e;
         }
-        PMLogger.getInstance().info("Database connection closed successfully");
         this.connectionEstablished = false;
         return true;
     }

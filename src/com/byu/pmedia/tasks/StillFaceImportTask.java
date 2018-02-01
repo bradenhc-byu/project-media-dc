@@ -50,11 +50,13 @@ public class StillFaceImportTask implements IStillFaceTask {
     }
 
     private void onImportFromFile() throws Exception {
+        PMLogger.getInstance().debug("Performing import task...");
         StillFaceVideoData videoData = new StillFaceVideoData();
         new StillFaceCSVParser().parseFromCSVIntoCodedVideoData(importFile.getAbsolutePath(), videoData);
         dao.lockConnection();
         int key = dao.insertImportData(importData);
         if(key > 0){
+            PMLogger.getInstance().debug("Import entry created, importing data...");
             for(StillFaceData data : videoData.getData()){
                 data.setImportID(key);
                 int dKey = dao.insertCodeData(data);
@@ -65,7 +67,8 @@ public class StillFaceImportTask implements IStillFaceTask {
             }
             StillFaceModel.getInstance().refreshImportData();
             StillFaceModel.getInstance().refreshCodeData();
-            StillFaceModel.getInstance().notifyObservers();
+            StillFaceModel.getInstance().refreshCodes();
+            PMLogger.getInstance().debug("Import task completed");
         }
         else{
             PMLogger.getInstance().error("Unable to insert data into database");

@@ -39,7 +39,7 @@ public class StillFaceQueryBuilder {
         else{
             importIDCondition = "iid = " + importID;
         }
-        return "SELECT d.*, c.name " +
+        return "SELECT d.*, c.name, c.delimiter " +
                 "FROM " + DATA_TABLE_NAME + " d " +
                 "INNER JOIN " + CODES_TABLE_NAME + " c ON c.cid = d.cid " +
                 "WHERE " + importIDCondition;
@@ -53,7 +53,7 @@ public class StillFaceQueryBuilder {
         else{
             familyIDCondition = "i.fid = " + familyID;
         }
-        return "SELECT d.*, c.name " +
+        return "SELECT d.*, c.name, c.delimiter " +
                 "FROM " + DATA_TABLE_NAME + " d " +
                 "INNER JOIN " + IMPORT_TABLE_NAME + " i ON i.iid = d.iid " +
                 "INNER JOIN " + CODES_TABLE_NAME + " c ON d.cid = c.cid " +
@@ -108,8 +108,8 @@ public class StillFaceQueryBuilder {
 
     public String buildInsertNewCode(StillFaceCode code){
         return "INSERT INTO " + CODES_TABLE_NAME + " " +
-                "(name) " +
-                "VALUES('" + code.getName() + "')";
+                "(name, delimiter) " +
+                "VALUES('" + code.getName() + "', " + code.getDelimiterIndex() + ")";
     }
 
     public String buildInsertNewTag(StillFaceTag tag){
@@ -147,6 +147,7 @@ public class StillFaceQueryBuilder {
         return "UPDATE " + CODES_TABLE_NAME + " " +
                 "SET " +
                 "name = '" + code.getName() + "' " +
+                "delimiter = " + code.getDelimiterIndex() + " " +
                 "WHERE cid = " + code.getCodeID();
     }
 
@@ -210,7 +211,8 @@ public class StillFaceQueryBuilder {
         return "CREATE TABLE " + CODES_TABLE_NAME + "\n" +
                 "(\n" +
                 "    cid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
-                "    name VARCHAR(200) NOT NULL\n"+
+                "    name VARCHAR(200) NOT NULL\n" +
+                "    delimiter INT NOT NULL\n" +
                 ")";
     }
 

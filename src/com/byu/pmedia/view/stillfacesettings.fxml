@@ -34,9 +34,13 @@
       <content>
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
-                  <TableView id="tableViewCodes" fx:id="tableViewCodes" editable="true" layoutX="14.0" layoutY="14.0" prefHeight="354.0" prefWidth="484.0" />
-                  <Button fx:id="buttonAddCode" layoutX="516.0" layoutY="342.0" mnemonicParsing="false" onAction="#onAddCode" prefHeight="25.0" prefWidth="70.0" text="Add" />
-                  <Button id="buttonDeleteCode" fx:id="buttonDeleteCode" onAction="#onDeleteCode" layoutX="516.0" layoutY="303.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Del" />
+                  <TableView id="tableViewCodes" fx:id="tableViewCodes" editable="true" layoutX="14.0" layoutY="14.0" prefHeight="354.0" prefWidth="337.0" />
+                  <Button fx:id="buttonAddCode" layoutX="369.0" layoutY="343.0" mnemonicParsing="false" onAction="#onAddCode" prefHeight="25.0" prefWidth="100.0" text="Add" />
+                  <Button id="buttonDeleteCode" fx:id="buttonDeleteCode" layoutX="486.0" layoutY="343.0" mnemonicParsing="false" onAction="#onDeleteCode" prefHeight="25.0" prefWidth="100.0" text="Delete" />
+                  <ChoiceBox fx:id="choiceBoxFirstCode" layoutX="369.0" layoutY="33.0" prefHeight="25.0" prefWidth="218.0" />
+                  <ChoiceBox fx:id="choiceBoxSecondCode" layoutX="369.0" layoutY="83.0" prefHeight="25.0" prefWidth="218.0" />
+                  <Label layoutX="369.0" layoutY="14.0" text="First Delimiter Code" />
+                  <Label layoutX="369.0" layoutY="63.0" text="Second Delimiter Code" />
                </children></AnchorPane>
       </content>
     </Tab>
@@ -46,7 +50,7 @@
                <children>
                   <TableView id="tableViewTags" fx:id="tableViewTags" layoutX="14.0" layoutY="14.0" prefHeight="354.0" prefWidth="484.0" />
                   <Button id="buttonAddTag" fx:id="buttonAddTag" layoutX="516.0" layoutY="342.0" mnemonicParsing="false" onAction="#onAddTag" prefHeight="25.0" prefWidth="70.0" text="Add" />
-                  <Button id="buttonDeleteTag" fx:id="buttonDeleteTag" onAction="#onDeleteTag" layoutX="516.0" layoutY="303.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="70.0" text="Del" />
+                  <Button id="buttonDeleteTag" fx:id="buttonDeleteTag" layoutX="516.0" layoutY="303.0" mnemonicParsing="false" onAction="#onDeleteTag" prefHeight="25.0" prefWidth="70.0" text="Del" />
                </children></AnchorPane>
          </content>
       </Tab>

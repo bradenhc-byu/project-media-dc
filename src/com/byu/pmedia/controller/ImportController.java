@@ -125,9 +125,9 @@ public class ImportController implements Initializable {
         new StillFaceImportTask(chosenFile, importData, new StillFaceTaskCallback() {
             @Override
             public void onSuccess() {
+                StillFaceModel.getInstance().notifyObservers();
                 close();
             }
-
             @Override
             public void onFail(Throwable exception) {
                 new StillFaceErrorNotification("An error occured while trying to import the data: " +
