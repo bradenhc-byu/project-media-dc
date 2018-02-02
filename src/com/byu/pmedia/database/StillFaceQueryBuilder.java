@@ -146,7 +146,7 @@ public class StillFaceQueryBuilder {
     public String buildUpdateExistingCode(StillFaceCode code){
         return "UPDATE " + CODES_TABLE_NAME + " " +
                 "SET " +
-                "name = '" + code.getName() + "' " +
+                "name = '" + code.getName() + "', " +
                 "delimiter = " + code.getDelimiterIndex() + " " +
                 "WHERE cid = " + code.getCodeID();
     }

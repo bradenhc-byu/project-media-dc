@@ -64,6 +64,7 @@ public class StillFaceDeleteImportTask implements IStillFaceTask {
         boolean success = dao.cleanImportData(importData.getImportID());
         if(success){
             PMLogger.getInstance().debug("Delete import task completed...");
+            StillFaceModel.getInstance().refresh();
         }
         else{
             PMLogger.getInstance().error("Unable to delete import data from database");

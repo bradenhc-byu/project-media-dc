@@ -2,10 +2,13 @@ package com.byu.pmedia.parser;
 
 import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceCode;
+import com.byu.pmedia.model.StillFaceCodeCount;
 import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceVideoData;
 
 import java.io.*;
+import java.util.List;
+import java.util.Map;
 
 public class StillFaceCSVParser {
 
@@ -89,6 +92,44 @@ public class StillFaceCSVParser {
             bw.close();
             PMLogger.getInstance().debug("Serialization complete");
             return true;
+        }
+        catch(FileNotFoundException e){
+            PMLogger.getInstance().error("Could not write to file, file not found: " + filename);
+            return false;
+        }
+        catch(IOException e){
+            PMLogger.getInstance().error("Caught IOException: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean serializeSummaryToCSVFromMaps(StillFaceCode delim1, StillFaceCode delim2,
+                                                 List<List<StillFaceCodeCount>> summary, String filename){
+        PMLogger.getInstance().debug("Serializing maps to summary file...");
+        if(summary.size() != 3){
+            PMLogger.getInstance().warn("Incorrect number of summaries in list. Should be 3");
+            return false;
+        }
+        try{
+            BufferedWriter bw = new BufferedWriter(new FileWriter(filename));
+
+            bw.write("Before " + delim1.getName() + " code name, count\n");
+            for(StillFaceCodeCount count : summary.get(0)) {
+                bw.write(count.getName() + this.delimeter + count.getCount() + "\n");
+            }
+            bw.write("After " + delim1.getName() + " code name, count\n");
+            for(StillFaceCodeCount count : summary.get(1)) {
+                bw.write(count.getName() + this.delimeter + count.getCount() + "\n");
+            }
+            bw.write("After " + delim2.getName() + " code name, count\n");
+            for(StillFaceCodeCount count : summary.get(2)) {
+                bw.write(count.getName() + this.delimeter + count.getCount() + "\n");
+            }
+
+            bw.close();
+            PMLogger.getInstance().debug("Finished serializing summary data to file");
+            return true;
+
         }
         catch(FileNotFoundException e){
             PMLogger.getInstance().error("Could not write to file, file not found: " + filename);

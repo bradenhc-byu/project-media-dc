@@ -98,10 +98,14 @@ public class DataCenterController implements Initializable, Observer {
     @FXML private Label labelDataTitle;
     @FXML private TilePane tilePaneSummary;
     @FXML private TableView tableData;
-    @FXML private TableView tableViewBeforeStillFace;
-    @FXML private TableView tableViewAfterStillFace;
-    @FXML private TableView tableViewAfterReconciliation;
+    @FXML private TableView tableViewBeforeDelimiter1;
+    @FXML private TableView tableViewAfterDelimiter1;
+    @FXML private TableView tableViewAfterDelimiter2;
     @FXML private Button buttonDeleteImport;
+    @FXML private Label labelBeforeDelimiter1;
+    @FXML private Label labelAfterDelimiter1;
+    @FXML private Label labelAfterDelimiter2;
+
 
     // Initialize the table columns here, so that they can be accessed throughout the class
     private TableColumn tableColumnID = new TableColumn("ID");
@@ -133,6 +137,7 @@ public class DataCenterController implements Initializable, Observer {
 
         buttonSaveChanges.setDisable(true);
         buttonExportToCSV.setDisable(true);
+        buttonDeleteImport.setDisable(true);
 
         // Setup import list view listener
         listViewExplorer.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<StillFaceImport>() {
@@ -258,35 +263,36 @@ public class DataCenterController implements Initializable, Observer {
     private void initializeSummaryTables(){
         // Setup the immutable table columns
         TableColumn tableColStillFaceCodeName = new TableColumn("Code");
-        tableColStillFaceCodeName.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, String>("name"));
-        tableColStillFaceCodeName.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.90));
+        tableColStillFaceCodeName.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCount, String>("name"));
+        tableColStillFaceCodeName.prefWidthProperty().bind(tableViewBeforeDelimiter1.widthProperty().multiply(0.90));
 
         TableColumn tableColStillFaceCount = new TableColumn("Count");
-        tableColStillFaceCount.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, Integer>("count"));
-        tableColStillFaceCount.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.10));
+        tableColStillFaceCount.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCount, Integer>("count"));
+        tableColStillFaceCount.prefWidthProperty().bind(tableViewBeforeDelimiter1.widthProperty().multiply(0.10));
 
         TableColumn tableColStillFaceCodeName2 = new TableColumn("Code");
-        tableColStillFaceCodeName2.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, String>("name"));
-        tableColStillFaceCodeName2.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.90));
+        tableColStillFaceCodeName2.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCount, String>("name"));
+        tableColStillFaceCodeName2.prefWidthProperty().bind(tableViewBeforeDelimiter1.widthProperty().multiply(0.90));
 
         TableColumn tableColStillFaceCount2 = new TableColumn("Count");
-        tableColStillFaceCount2.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, Integer>("count"));
-        tableColStillFaceCount2.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.10));
+        tableColStillFaceCount2.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCount, Integer>("count"));
+        tableColStillFaceCount2.prefWidthProperty().bind(tableViewBeforeDelimiter1.widthProperty().multiply(0.10));
 
         TableColumn tableColStillFaceCodeName3 = new TableColumn("Code");
-        tableColStillFaceCodeName3.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, String>("name"));
-        tableColStillFaceCodeName3.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.90));
+        tableColStillFaceCodeName3.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCount, String>("name"));
+        tableColStillFaceCodeName3.prefWidthProperty().bind(tableViewBeforeDelimiter1.widthProperty().multiply(0.90));
 
         TableColumn tableColStillFaceCount3 = new TableColumn("Count");
-        tableColStillFaceCount3.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCounts, Integer>("count"));
-        tableColStillFaceCount3.prefWidthProperty().bind(tableViewBeforeStillFace.widthProperty().multiply(0.10));
+        tableColStillFaceCount3.setCellValueFactory(new PropertyValueFactory<StillFaceCodeCount, Integer>("count"));
+        tableColStillFaceCount3.prefWidthProperty().bind(tableViewBeforeDelimiter1.widthProperty().multiply(0.10));
 
-        tableViewBeforeStillFace.getColumns().setAll(tableColStillFaceCodeName, tableColStillFaceCount);
-        tableViewAfterStillFace.getColumns().setAll(tableColStillFaceCodeName2, tableColStillFaceCount2);
-        tableViewAfterReconciliation.getColumns().setAll(tableColStillFaceCodeName3, tableColStillFaceCount3);
-        tableViewBeforeStillFace.setEditable(false);
-        tableViewAfterStillFace.setEditable(false);
-        tableViewAfterReconciliation.setEditable(false);
+        tableViewBeforeDelimiter1.getColumns().setAll(tableColStillFaceCodeName, tableColStillFaceCount);
+        tableViewAfterDelimiter1.getColumns().setAll(tableColStillFaceCodeName2, tableColStillFaceCount2);
+        tableViewAfterDelimiter2.getColumns().setAll(tableColStillFaceCodeName3, tableColStillFaceCount3);
+        tableViewBeforeDelimiter1.setEditable(false);
+        tableViewAfterDelimiter1.setEditable(false);
+        tableViewAfterDelimiter2.setEditable(false);
+        updateSummaryTableLabels();
     }
 
     /**
@@ -490,7 +496,6 @@ public class DataCenterController implements Initializable, Observer {
                         new StillFaceDeleteImportTask(importToDelete, new StillFaceTaskCallback() {
                             @Override
                             public void onSuccess() {
-                                StillFaceModel.getInstance().refresh();
                                 StillFaceModel.getInstance().notifyObservers();
                             }
 
@@ -505,7 +510,7 @@ public class DataCenterController implements Initializable, Observer {
                     public void onCancel() {
 
                     }
-                });
+                }).show();
     }
 
     /**
@@ -627,6 +632,7 @@ public class DataCenterController implements Initializable, Observer {
 
         TextField textFieldFileName = new TextField();
         textFieldFileName.setPromptText("Enter file name");
+        textFieldFileName.setText(StillFaceModel.getInstance().getVisibleImport().getPid());
 
         grid.add(buttonDirectoryChooser, 0, 0);
         grid.add(labelExportLocation, 1, 0);
@@ -683,7 +689,8 @@ public class DataCenterController implements Initializable, Observer {
             updateImports();
             // Refresh the data view
             updateData();
-
+            // Refresh the labels on the summary tables
+            updateSummaryTableLabels();
         }
     }
 
@@ -722,6 +729,9 @@ public class DataCenterController implements Initializable, Observer {
         if(dataList.size() == 0){
             Platform.runLater(() -> {
                 tableData.setItems(null);
+                tableViewBeforeDelimiter1.setItems(null);
+                tableViewAfterDelimiter1.setItems(null);
+                tableViewAfterDelimiter2.setItems(null);
                 labelDataTitle.setText("");
                 labelYear.setText("Year:");
                 labelTag.setText("Tag:");
@@ -730,6 +740,7 @@ public class DataCenterController implements Initializable, Observer {
                 tilePaneSummary.getChildren().clear();
                 buttonExportToCSV.setDisable(true);
                 buttonSaveChanges.setDisable(true);
+                buttonDeleteImport.setDisable(true);
             });
             return;
         }
@@ -763,7 +774,7 @@ public class DataCenterController implements Initializable, Observer {
             // Code stats
             String codeName = data.getCode().getName();
             if(data.getCode().getDelimiterIndex() > delimiterIndex){
-                delimiterIndex++;
+                delimiterIndex = data.getCode().getDelimiterIndex();
             }
             if(mostCommonCode.containsKey(codeName)){
                 int count = mostCommonCode.get(codeName);
@@ -823,24 +834,24 @@ public class DataCenterController implements Initializable, Observer {
                 maxEntry = entry;
             }
         }
-        List<StillFaceCodeCounts> firstCounts = new ArrayList<>();
-        List<StillFaceCodeCounts> secondCounts = new ArrayList<>();
-        List<StillFaceCodeCounts> thirdCounts = new ArrayList<>();
+        List<StillFaceCodeCount> firstCounts = new ArrayList<>();
+        List<StillFaceCodeCount> secondCounts = new ArrayList<>();
+        List<StillFaceCodeCount> thirdCounts = new ArrayList<>();
         for(Map.Entry<String, Integer> entry : mostCommonCodeFirst.entrySet()){
-            firstCounts.add(new StillFaceCodeCounts(entry.getKey(), entry.getValue()));
+            firstCounts.add(new StillFaceCodeCount(entry.getKey(), entry.getValue()));
         }
         for(Map.Entry<String, Integer> entry : mostCommonCodeSecond.entrySet()){
-            secondCounts.add(new StillFaceCodeCounts(entry.getKey(), entry.getValue()));
+            secondCounts.add(new StillFaceCodeCount(entry.getKey(), entry.getValue()));
         }
         for(Map.Entry<String, Integer> entry : mostCommonCodeThird.entrySet()){
-            thirdCounts.add(new StillFaceCodeCounts(entry.getKey(), entry.getValue()));
+            thirdCounts.add(new StillFaceCodeCount(entry.getKey(), entry.getValue()));
         }
         Collections.sort(firstCounts);
         Collections.sort(secondCounts);
         Collections.sort(thirdCounts);
-        tableViewBeforeStillFace.setItems(FXCollections.observableList(firstCounts));
-        tableViewAfterStillFace.setItems(FXCollections.observableList(secondCounts));
-        tableViewAfterReconciliation.setItems(FXCollections.observableList(thirdCounts));
+        tableViewBeforeDelimiter1.setItems(FXCollections.observableList(firstCounts));
+        tableViewAfterDelimiter1.setItems(FXCollections.observableList(secondCounts));
+        tableViewAfterDelimiter2.setItems(FXCollections.observableList(thirdCounts));
         String mostCommon = (maxEntry != null && maxEntry.getKey() != null) ? maxEntry.getKey() : "";
         Platform.runLater(()->{
             tilePaneSummary.getChildren().clear();
@@ -850,6 +861,7 @@ public class DataCenterController implements Initializable, Observer {
             tilePaneSummary.getChildren().add(new Text("Total duration (sec): " + dataList.get(dataList.size() - 1).getTime()/1000));
 
             buttonExportToCSV.setDisable(false);
+            buttonDeleteImport.setDisable(false);
         });
 
 
@@ -857,50 +869,18 @@ public class DataCenterController implements Initializable, Observer {
 
     }
 
-
     /**
-     * Inner-class that holds information about StillFaceCodes and their counts within a dataset. This is a
-     * necessary wrapper for filling the three JavaFX TableViews that hold summative code information.
-     * @author Braden Hitchcock
+     * Detects changes made to the delimiter codes and updates the labels in the view according
      */
-    public class StillFaceCodeCounts implements Comparable<StillFaceCodeCounts>{
-
-        /* Holds the name of the Code */
-        private String name;
-        /* Holds the number of occurrences of the code in the dataset*/
-        private int count;
-
-        /**
-         * Constructor for a StillFaceCodeCount object. Creates a new instance.
-         *
-         * @param name The name of the code
-         * @param count The number of occurances of the code
-         */
-        public StillFaceCodeCounts(String name, int count) {
-            this.name = name;
-            this.count = count;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getCount() {
-            return count;
-        }
-
-        /**
-         * Allows a collection of StillFaceCodeCount objects to be sorted in descending order
-         *
-         * @param stillFaceCodeCounts The object to compare this object to
-         * @return 0 if the two are equal, greater than one if this object's counts are less than the
-         *         comparison object, and less than one if this object's counts are greater than the
-         *         comparison object
-         */
-        @Override
-        public int compareTo(StillFaceCodeCounts stillFaceCodeCounts) {
-            int compareCount = stillFaceCodeCounts.getCount();
-            return compareCount - this.count;
+    private void updateSummaryTableLabels(){
+        for(StillFaceCode c : StillFaceModel.getCodeList()){
+            if(c.getDelimiterIndex() == 1){
+                labelBeforeDelimiter1.setText("Before " + c.getName());
+                labelAfterDelimiter1.setText("After " + c.getName());
+            }
+            else if(c.getDelimiterIndex() == 2){
+                labelAfterDelimiter2.setText("After " + c.getName());
+            }
         }
     }
 

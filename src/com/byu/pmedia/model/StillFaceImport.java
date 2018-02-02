@@ -15,6 +15,7 @@ public class StillFaceImport {
     private StillFaceTag tag;
     private String alias;
     private Date date;
+    private String pid;
 
     /**
      * The following variables are defined for use with the CQEngine IndexedCollections. This allows us to
@@ -48,6 +49,7 @@ public class StillFaceImport {
         this.tag = tag;
         this.alias = alias;
         this.date = date;
+        this.pid = String.format("%d-%d-%d", this.year, this.familyID, this.participantNumber);
     }
 
     public StillFaceImport(String filename, int year, int familyID, int participantNumber,
@@ -59,6 +61,7 @@ public class StillFaceImport {
         this.tag = tag;
         this.alias = alias;
         this.date = date;
+        this.pid = String.format("%d-%d-%d", this.year, this.familyID, this.participantNumber);
     }
 
     public int getImportID() {
@@ -104,6 +107,10 @@ public class StillFaceImport {
     public void setParticipantNumber(int participantNumber) {
         this.participantNumber = participantNumber;
     }
+
+    public String getPid() { return this.pid; }
+
+    public void setPid(String pid) { this.pid = pid;}
 
     public StillFaceTag getTag() {
         return tag;

@@ -193,9 +193,9 @@ public class StillFaceDAO {
         // Execute the query
         try{
             this.openConnection();
-            PreparedStatement statement = this.databaseConnection.getConnection().prepareStatement(queryI);
+            PreparedStatement statement = this.databaseConnection.getConnection().prepareStatement(queryD);
             statement.executeUpdate();
-            statement = this.databaseConnection.getConnection().prepareStatement(queryD);
+            statement = this.databaseConnection.getConnection().prepareStatement(queryI);
             statement.executeUpdate();
             this.closeConnection();
             return true;
