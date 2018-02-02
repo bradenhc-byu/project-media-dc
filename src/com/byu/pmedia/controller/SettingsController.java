@@ -39,8 +39,24 @@ import java.util.*;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
+/**
+ * SettingsController
+ * Provides control for and initializes the Settings GUI for the DataCenter. Allows the user to control configuration
+ * of the application and modify StillFace codes and tag.This class follows the Observer pattern in that it registers
+ * itself as an observer of the StillFaceModel and updates the GUI associated with it whenever it is notified of
+ * changes made in the model.
+ * <p>
+ * This controller differs slightly from the others in that it does not always spin up StillFace tasks to perform work.
+ * Tasks such as updating code information and tag information are done in sync with the user's interactions so that
+ * they can immediately see results. As such it has a reference to a StillFaceDAO object it uses to update the
+ * database
+ *
+ * @author Braden Hitchcock
+ */
 public class SettingsController implements Initializable, Observer {
 
+    /* The GUI elements associated with this controller are listed below.
+     * Their names should be self describing. */
     @FXML private ChoiceBox choiceBoxFirstCode;
     @FXML private ChoiceBox choiceBoxSecondCode;
     @FXML private Button buttonDeleteCode;
@@ -70,9 +86,21 @@ public class SettingsController implements Initializable, Observer {
     @FXML private PasswordField textFieldDBPassword;
     @FXML private CheckBox checkboxDataCache;
 
+    /* Keeps track of any configuration changes made that could potential require a restart
+     * of the application (or at least re-initialize). */
     private boolean changesMade = false;
+
+    /* The reference to the DAO that allows this controller to update the database */
     private StillFaceDAO dao;
 
+    /**
+     * Initializes the GUI components of the view associated with this controller
+     *
+     * @param url The location used to resolve relative paths for the root object, or null if the location is not
+     *            known.
+     * @param resourceBundle The resources used to localize the root object, or null if the root object was not
+     *                       localized.
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
@@ -230,6 +258,14 @@ public class SettingsController implements Initializable, Observer {
         StillFaceModel.getInstance().addObserver(this);
     }
 
+    /**
+     * Listener triggered when the controller detects an action by the user on the 'Save' button. It will gather
+     * any changed configuration and write the new values to the configuration file used to initialize the
+     * application. If successful, it will reinitialize the singleton instance of the config object and refresh the
+     * internal data model, notifying any observers of the model.
+     *
+     * @param actionEvent The event detected by the controller
+     */
     @FXML
     private void onSaveAction(ActionEvent actionEvent) {
         if(changesMade) {
@@ -249,45 +285,53 @@ public class SettingsController implements Initializable, Observer {
             StillFaceConfig.getInstance().setWithString("database.password", textFieldDBPassword.getText());
             StillFaceConfig.getInstance().setWithBoolean("model.cache", checkboxDataCache.isSelected());
             boolean success = StillFaceConfig.getInstance().save();
-            if (success) {
-                String message = "Changes have been made to the application configuration. " +
-                        "Do you wish to restart the program?";
-                new StillFaceConfirmNotification(message, new ConfirmAction() {
-                    @Override
-                    public void onOK() {
-                        restart();
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        close();
-                    }
-                }).show();
+            if (!success) {
+                PMLogger.getInstance().error("Unable to successfully save configuration.");
+                new StillFaceErrorNotification("Failed to save settings. See log for details.").show();
+            }
+            else {
+                // Reload all the config
+                StillFaceConfig.getInstance().initialize(StillFaceConfig.getInstance().getFilename());
+                // Refresh the data model and notify observers of changes
+                StillFaceModel.getInstance().refresh();
+                StillFaceModel.getInstance().notifyObservers();
             }
         }
         close();
     }
 
+    /**
+     * Listener triggered when an action is detected on the 'Cancel' button. Closes the window.
+     *
+     * @param actionEvent The event detected by the controller
+     */
     @FXML
     private void onCancelAction(ActionEvent actionEvent) {
         close();
     }
 
+    /**
+     * Closes the window
+     */
     private void close(){
         ((Stage)buttonCancel.getScene().getWindow()).close();
     }
 
-    private void restart(){
-        close();
-    }
-
+    /**
+     * Listener triggered when an action is detected on the 'Add' button from the 'Codes' tab. Opens a dialogue the user
+     * can use to create a new code.
+     *
+     * @param actionEvent The event detected by the controller
+     */
     @FXML
     private void onAddCode(ActionEvent actionEvent) {
+        // Open a dialog
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add Code");
         dialog.setHeaderText("Enter the code name below");
         dialog.setContentText("Code Name:");
         Optional<String> result = dialog.showAndWait();
+        // If the user provided a name, create the tag
         result.ifPresent(name -> {
             StillFaceCode code = new StillFaceCode(name);
             int key = dao.insertNewCode(code);
@@ -301,16 +345,25 @@ public class SettingsController implements Initializable, Observer {
                 StillFaceModel.getInstance().refreshCodes();
             }
         });
+        // Notify all model observers of the change
         StillFaceModel.getInstance().notifyObservers();
     }
 
+    /**
+     * Listener triggered when the controller detects an event on the 'Add' button from the 'Tag' tab. Opens a dialogue
+     * the user can use to create a new tag.
+     *
+     * @param actionEvent The action detected by the controller
+     */
     @FXML
     private void onAddTag(ActionEvent actionEvent) {
+        // Open the dialogue
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add Tag");
         dialog.setHeaderText("Enter the tag name below");
         dialog.setContentText("Tag Name:");
         Optional<String> result = dialog.showAndWait();
+        // If the user supplied a tag name, create a new tag
         result.ifPresent(name -> {
             StillFaceTag tag = new StillFaceTag(name);
             int key = dao.insertNewTag(tag);
@@ -324,9 +377,17 @@ public class SettingsController implements Initializable, Observer {
                 StillFaceModel.getInstance().refreshTags();
             }
         });
+        // Notify all observers of the model of the change
         StillFaceModel.getInstance().notifyObservers();
     }
 
+    /**
+     * Listener triggered when the controller detects an action on the 'Delete' button on the 'Code' tab. Attempts
+     * to delete the code. If it detects that the code is in use somewhere else in the program, it will prompt the
+     * user to make an appropriate action to ensure that the integrity of the data in the system is not compromised.
+     *
+     * @param actionEvent The action detected by the controller
+     */
     @FXML
     private void onDeleteCode(ActionEvent actionEvent) {
         StillFaceCode codeToDelete = (StillFaceCode)tableViewCodes.getSelectionModel().getSelectedItem();
@@ -372,6 +433,13 @@ public class SettingsController implements Initializable, Observer {
         StillFaceModel.getInstance().notifyObservers();
     }
 
+    /**
+     * Listener triggered when there is an action detected on the 'Delete' button on the 'Tag' tab. Attempts to delete
+     * the selected tag. If the tag is in use somewhere else in the program, it will prompt the user the make
+     * the necessary changes to the system to ensure data integrity.
+     *
+     * @param actionEvent The action detected by the controller
+     */
     @FXML
     private void onDeleteTag(ActionEvent actionEvent) {
         // Get the selected value
@@ -412,7 +480,13 @@ public class SettingsController implements Initializable, Observer {
         StillFaceModel.getInstance().notifyObservers();
     }
 
-
+    /**
+     * Method called when the StillFaceModel's notifyObservers() method is called. This class acts as an observer on
+     * the model and will make appropriate changes to the GUI when it is notified of changes made to the model.
+     *
+     * @param observable The object that this class is observing
+     * @param o An option object passed from the observable object to this class.
+     */
     @Override
     public void update(Observable observable, Object o) {
         if(observable == StillFaceModel.getInstance()){
@@ -423,26 +497,49 @@ public class SettingsController implements Initializable, Observer {
         }
     }
 
+    /**
+     * Updates the list of codes on the 'Code' tab in the GUI
+     */
     private void updateCodes(){
         tableViewCodes.setItems(FXCollections.observableArrayList(StillFaceModel.getCodeList()));
     }
 
+    /**
+     * Updates the list of tags on the 'Tag' tab in the GUI
+     */
     private void updateTags(){
         tableViewTags.setItems(FXCollections.observableArrayList(StillFaceModel.getTagList()));
     }
 
+    /**
+     * When the user changes a code delimeter from the GUI, this will update the delimter values of the codes in the
+     * database to reflect the change.
+     *
+     * @param code The code that was selected
+     * @param index The delimiter index that should be assigned to the code
+     */
     private void setCodeDelimiter(StillFaceCode code, int index){
+        // Get the old code that has the index and set it to 0
         StillFaceCode c = retrieveCodeWithIndex(index);
         if(c != null){
             c.setDelimiterIndex(0);
             dao.updateExistingCode(c);
         }
+        // Update the selected code's index
         code.setDelimiterIndex(index);
         dao.updateExistingCode(code);
+        // Refresh the model and notify observers
         StillFaceModel.getInstance().refreshCodes();
         StillFaceModel.getInstance().notifyObservers();
     }
 
+    /**
+     * Query's the internal model and retrieves the StillFaceCode object that has its delimiter set to the
+     * provided index
+     *
+     * @param index The delimiter index to search for
+     * @return The StillFaceCode that has the desired index if found. Null otherwise.
+     */
     private StillFaceCode retrieveCodeWithIndex(int index){
         Query<StillFaceCode> query = equal(StillFaceCode.DELIMITER_INDEX, index);
         StillFaceCode code = null;

@@ -28,10 +28,28 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
+/**
+ * DataCenterClientFX
+ * Main application for the ProjectMEDIA Data Center. This class creates a splash screen for the user while it
+ * initializes a connection with the database, the internal model, and GUI elements. It loads the main GUI from a
+ * FXML file and assigns it to the root stage. It also sets up keyboard shortcuts that execute certain tasks from the
+ * main GUI.
+ *
+ * @author Braden Hitchcock
+ */
 public class DataCenterClientFX extends Application {
 
+    /* Key combinations can be initialized here.*/
+    /* This key combination is for Ctrl+s (saving the edited data) */
     private final KeyCombination keyCombinationSave = new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN);
 
+    /**
+     * Overrides the default implementation of a JavaFX Application's start method. This is where all initialization
+     * happens and the main GUI is loaded by the FXMLLoader.
+     *
+     * @param stage The primary JavaFX stage
+     * @throws Exception If an error occurs during initialization, it can throw an exception to be handled by JavaFX
+     */
     @Override
     public void start(Stage stage) throws Exception {
         // Show splash screen while initializing
@@ -85,9 +103,15 @@ public class DataCenterClientFX extends Application {
             }
         });
 
+        // Display the main GUI
         stage.show();
     }
 
+    /**
+     * Main method. Simply calls launch to kick-off the JavaFX Application
+     *
+     * @param args A string array of arguments passed to the application, usually from the command line
+     */
     public static void main(String[] args) {
         launch(args);
     }
