@@ -110,6 +110,15 @@ public class StillFaceModel extends Observable {
         }
     }
 
+    /**
+     * Provides access to an indexed collection of import data entries from the database. If the model is cached, these
+     * will be in-memory. Otherwise the model will query the database to get the information.
+     * <p>
+     * The IndexedCollection objects are a part of the CQEngine implementation on GitHub. They provide extremely
+     * fast, SQL-like access to internal data structures.
+     *
+     * @return An IndexedCollection of StillFaceImport objects representing the entries in the database
+     */
     public IndexedCollection<StillFaceImport> getImportDataCollection() {
         if(this.initialized) {
             return (this.cached) ? importDataCollection : this.dao.getImportData(0);
@@ -117,6 +126,15 @@ public class StillFaceModel extends Observable {
         return null;
     }
 
+    /**
+     * Provides access to an indexed collection of video data entries from the database. If the model is cached, these
+     * will be in-memory. Otherwise the model will query the database to get the information.
+     * <p>
+     * The IndexedCollection objects are a part of the CQEngine implementation on GitHub. They provide extremely
+     * fast, SQL-like access to internal data structures.
+     *
+     * @return An IndexedCollection of StillFaceData objects representing the entries in the database
+     */
     public IndexedCollection<StillFaceData> getDataCollection() {
         if(this.initialized) {
             return (this.cached) ? dataCollection : this.dao.getCodeDataFromImport(0);
@@ -124,6 +142,15 @@ public class StillFaceModel extends Observable {
         return null;
     }
 
+    /**
+     * Provides access to an indexed collection of code data entries from the database. If the model is cached, these
+     * will be in-memory. Otherwise the model will query the database to get the information.
+     * <p>
+     * The IndexedCollection objects are a part of the CQEngine implementation on GitHub. They provide extremely
+     * fast, SQL-like access to internal data structures.
+     *
+     * @return An IndexedCollection of StillFaceCode objects representing the entries in the database
+     */
     public IndexedCollection<StillFaceCode> getCodeCollection() {
         if(this.initialized) {
             return (this.cached) ? codeCollection : this.dao.getCode(0);
@@ -131,6 +158,15 @@ public class StillFaceModel extends Observable {
         return null;
     }
 
+    /**
+     * Provides access to an indexed collection of tag data entries from the database. If the model is cached, these
+     * will be in-memory. Otherwise the model will query the database to get the information.
+     * <p>
+     * The IndexedCollection objects are a part of the CQEngine implementation on GitHub. They provide extremely
+     * fast, SQL-like access to internal data structures.
+     *
+     * @return An IndexedCollection of StillFaceTag objects representing the entries in the database
+     */
     public IndexedCollection<StillFaceTag> getTagCollection() {
         if(this.initialized){
             return (this.cached) ? tagCollection : this.dao.getTag(0);
@@ -138,38 +174,91 @@ public class StillFaceModel extends Observable {
         return null;
     }
 
+    /**
+     * Provides access to a list of all the code entries in the database. This provides easy access for populating
+     * ChoiceBox objects and other lists in the GUI.
+     *
+     * @return A list of StillFaceCode objects representing all the available codes in the database
+     */
     public static List<StillFaceCode> getCodeList(){ return codeList; }
 
+    /**
+     * Provides access to a list of all the tag entries in the database. This provides easy access for populating
+     * ChoiceBox objects and other lists in the GUI.
+     *
+     * @return A list of StillFaceTag objects representing all the available tags in the database
+     */
     public static List<StillFaceTag> getTagList() { return tagList; }
 
+    /**
+     * Provides access to the list of data visible on the GUI. This list is composed of StillFaceData objects based on
+     * a specific import or on a search query and is used in exporting the data to a file.
+     *
+     * @return A list of the StillFaceData objects visible on the GUI
+     */
     public List<StillFaceData> getVisibleDataList(){ return visibleDataList; }
 
+    /**
+     * Sets the visible data to the provided list
+     *
+     * @param data A list of StillFaceData objects that are visible from the GUI
+     */
     public void setVisibleData(List<StillFaceData> data){
         visibleDataList = data;
         setChanged();
     }
 
+    /**
+     * Provides access to the currently selected import in the GUI
+     *
+     * @return A StillFaceImport object representing the selected import from the list in the GUI
+     */
     public StillFaceImport getVisibleImport() {
         return visibleImport;
     }
 
+    /**
+     * Sets the currently selected/visible import on the GUI
+     *
+     * @param importData The StillFaceImport object representing the visible and selected object in the GUI
+     */
     public void setVisibleImport(StillFaceImport importData){
         this.visibleImport = importData;
         setChanged();
     }
 
+    /**
+     * Provides access to all the unsaved edits made by the user
+     *
+     * @return A map of edited StillFaceData objects with their ids being the key
+     */
     public Map<Integer, StillFaceData> getEditedDataMap(){ return editedDataMap; }
 
+    /**
+     * Adds or updates an edited StillFaceData object in the map that is tracking the changes.
+     *
+     * @param data The newly updated object to add
+     */
     public void addEditedData(StillFaceData data){
         editedDataMap.put(data.getDataID(), data);
         setChanged();
     }
 
+    /**
+     * After the edits have been saved, or the user discards the changes with a sync request, this method helps clear
+     * the edits that were in the map.
+     */
     public void clearEdits(){
         editedDataMap.clear();
         setChanged();
     }
 
+    /**
+     * Contacts the database and re-populates the internal cache of import data. If the data in not cached, nothing
+     * happens since the data is obtained by communicating with the database directly.
+     *
+     * @return True if the refresh succeeds or the data is not cached, false otherwise
+     */
     public boolean refreshImportData(){
         if(this.initialized && this.cached){
             IndexedCollection<StillFaceImport> tmpCollection = this.dao.getImportData(0);
@@ -183,6 +272,12 @@ public class StillFaceModel extends Observable {
         return !this.cached;
     }
 
+    /**
+     * Contacts the database and re-populates the internal cache of video data. If the data in not cached, nothing
+     * happens since the data is obtained by communicating with the database directly.
+     *
+     * @return True if the refresh succeeds or the data is not cached, false otherwise
+     */
     public boolean refreshCodeData(){
         if(this.initialized && this.cached){
             IndexedCollection<StillFaceData> tmpCollection = this.dao.getCodeDataFromImport(0);
@@ -197,6 +292,12 @@ public class StillFaceModel extends Observable {
         return !this.cached;
     }
 
+    /**
+     * Contacts the database and re-populates the internal cache of code data. If the data in not cached, nothing
+     * happens since the data is obtained by communicating with the database directly.
+     *
+     * @return True if the refresh succeeds or the data is not cached, false otherwise
+     */
     public boolean refreshCodes(){
         if(this.initialized && this.cached){
             IndexedCollection<StillFaceCode> tmpCollection = this.dao.getCode(0);
@@ -211,6 +312,12 @@ public class StillFaceModel extends Observable {
         return !this.cached;
     }
 
+    /**
+     * Contacts the database and re-populates the internal cache of tag data. If the data in not cached, nothing
+     * happens since the data is obtained by communicating with the database directly.
+     *
+     * @return True if the refresh succeeds or the data is not cached, false otherwise
+     */
     public boolean refreshTags(){
         if(this.initialized && this.cached){
             IndexedCollection<StillFaceTag> tmpCollection = this.dao.getTag(0);
@@ -225,6 +332,12 @@ public class StillFaceModel extends Observable {
         return !this.cached;
     }
 
+    /**
+     * Contacts the database and re-populates the internal caches of all data in the model. If the data in not cached,
+     * nothing happens since the data is obtained by communicating with the database directly.
+     *
+     * @return True if the refresh succeeds or the data is not cached, false otherwise
+     */
     public boolean refresh(){
         this.editedDataMap.clear();
         this.visibleImport = null;
@@ -233,6 +346,9 @@ public class StillFaceModel extends Observable {
         return refreshImportData() && refreshCodeData() && refreshCodes() && refreshTags();
     }
 
+    /**
+     * Updates the statically available code list with the latest data from the database
+     */
     private void populateCodeList(){
         if(initialized) {
             codeList.clear();
@@ -246,6 +362,9 @@ public class StillFaceModel extends Observable {
         }
     }
 
+    /**
+     * Updates the statically available tag list with the latest data from the database
+     */
     private void populateTagList(){
         if(initialized) {
             tagList.clear();
@@ -259,10 +378,17 @@ public class StillFaceModel extends Observable {
         }
     }
 
+    /**
+     * Locks the connection used by the internal DAO of the model. This helps reduce the number of times the model has
+     * to connect to the database when making consecutive requests.
+     */
     public void lockDatabaseConnection(){
         this.dao.lockConnection();
     }
 
+    /**
+     * Unlocks the connection used by the internal DAO of the model.
+     */
     public void unlockDatabaseConnection(){
         this.dao.unlockConnection();
     }

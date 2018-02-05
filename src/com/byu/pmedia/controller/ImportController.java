@@ -87,7 +87,7 @@ public class ImportController implements Initializable {
     @FXML
     private void onChooseFile(ActionEvent actionEvent) {
         this.fileChooser.setTitle("Open Resource File");
-        this.fileChooser.setInitialDirectory(new File("."));
+        this.fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         this.chosenFile = fileChooser.showOpenDialog(null);
         if(this.chosenFile != null){
             this.textFieldChosenFile.setText(chosenFile.getName());

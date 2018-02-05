@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This XLM file provides the majority of the GUI construction and initialization for the import GUI.
+    It is controlled by the ImportController, and additional initialization and listeners can be found there.
 
+    @author Braden Hitchcock
+-->
 <?import javafx.scene.control.*?>
 <?import java.lang.*?>
 <?import javafx.scene.layout.*?>

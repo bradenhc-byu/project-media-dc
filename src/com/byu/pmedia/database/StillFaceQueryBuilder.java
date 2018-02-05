@@ -1,3 +1,14 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.database;
 
 import com.byu.pmedia.model.StillFaceCode;
@@ -5,18 +16,33 @@ import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceImport;
 import com.byu.pmedia.model.StillFaceTag;
 
-
+/**
+ * StillFaceQueryBuilder
+ * Responsible for building the SQL queries used to access and modify information in the database. Given different
+ * database types (SQL, MySQL, etc.) these queries are able to adapt to the connection and constructed syntactically
+ * correct queries for any of the available database connection types.
+ *
+ * @author Braden Hitchcock
+ */
 public class StillFaceQueryBuilder {
 
+    /* Constants defining the table names in the database structure */
     private final String IMPORT_TABLE_NAME = "sf_imports";
     private final String DATA_TABLE_NAME = "sf_data";
     private final String CODES_TABLE_NAME = "sf_codes";
     private final String TAGS_TABLE_NAME = "sf_tags";
 
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // SELECT statements
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates a query that returns import data from the database based on the provided import ID. If the developer
+     * wishes to get all import data entries, simply pass 0 in as a parameter
+     *
+     * @param importID The id of the entry to query. If 0, will return all entries
+     * @return A string representing the query to be used to access import data in the database
+     */
     public String buildSelectImportData(int importID){
         String importIDCondition;
         if(importID == 0){
@@ -31,6 +57,13 @@ public class StillFaceQueryBuilder {
                 "WHERE " + importIDCondition;
     }
 
+    /**
+     * Creates a query that returns video data from the database based on the provided import ID. If the developer
+     * wishes to get all data entries, simply pass 0 in as a parameter
+     *
+     * @param importID The id of the entry to query. If 0, will return all entries
+     * @return A string representing the query to be used to access video data in the database
+     */
     public String buildSelectCodeDataFromImport(int importID){
         String importIDCondition;
         if(importID == 0){
@@ -45,6 +78,13 @@ public class StillFaceQueryBuilder {
                 "WHERE " + importIDCondition;
     }
 
+    /**
+     * Creates a query that returns video data from the database based on the provided import ID. If the developer
+     * wishes to get all import data entries, simply pass 0 in as a parameter
+     *
+     * @param familyID The fid of the entry to query. If 0, will return all entries
+     * @return A string representing the query to be used to access video data in the database
+     */
     public String buildSelectCodeDataFromFamilyID(int familyID){
         String familyIDCondition;
         if(familyID == 0){
@@ -60,6 +100,13 @@ public class StillFaceQueryBuilder {
                 "WHERE " + familyIDCondition;
     }
 
+    /**
+     * Creates a query that returns code data from the database based on the provided code id. If the developer wishes
+     * to get all codes in the database, simply pass 0 as a parameter.
+     *
+     * @param codeID The id of the code to access. If 0, will return all codes
+     * @return A string representing the query to be used to access codes in the database
+     */
     public String buildSelectCode(int codeID){
         String codeIDCondition;
         if(codeID == 0){
@@ -73,6 +120,13 @@ public class StillFaceQueryBuilder {
                 "WHERE " + codeIDCondition;
     }
 
+    /**
+     * Creates a query that returns tag data from the database based on the provided code id. If the developer wishes
+     * to get all tags in the database, simply pass 0 as a parameter.
+     *
+     * @param tagID The id of the tag to access. If 0, will return all tags
+     * @return A string representing the query to be used to access tags in the database
+     */
     public String buildSelectTag(int tagID){
         String tagIDCondition;
         if(tagID == 0){
@@ -86,10 +140,16 @@ public class StillFaceQueryBuilder {
                 "WHERE " + tagIDCondition;
     }
 
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // INSERT statements
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates a query that can be used to insert a new entry of import data into the database.
+     *
+     * @param importData The import data object to enter into the database
+     * @return A string representing an INSERT query that puts the provided object in the database
+     */
     public String buildInsertImport(StillFaceImport importData){
         return "INSERT INTO " + IMPORT_TABLE_NAME + " " +
                 "(filename, syear, fid, pid, tid, alias, date) " +
@@ -99,29 +159,53 @@ public class StillFaceQueryBuilder {
                 importData.getDate().toString() + "')";
     }
 
-    public String buildInsertCodeData(StillFaceData data){
+    /**
+     * Creates a query that can be used to insert a new entry of video data into the database.
+     *
+     * @param data The data object to enter into the database
+     * @return A string representing an INSERT query that puts the provided object in the database
+     */
+    public String buildInsertData(StillFaceData data){
         return "INSERT INTO " + DATA_TABLE_NAME + " " +
                 "(iid, time, duration, cid, comment) " +
                 "VALUES(" + data.getImportID() + ", " + data.getTime() + ", " + data.getDuration() + ", " +
                 data.getCode().getCodeID() + ", '" + data.getComment() + "')";
     }
 
-    public String buildInsertNewCode(StillFaceCode code){
+    /**
+     * Creates a query that can be used to insert a new entry of code data into the database.
+     *
+     * @param code The code data object to enter into the database
+     * @return A string representing an INSERT query that puts the provided object in the database
+     */
+    public String buildInsertCode(StillFaceCode code){
         return "INSERT INTO " + CODES_TABLE_NAME + " " +
                 "(name, delimiter) " +
                 "VALUES('" + code.getName() + "', " + code.getDelimiterIndex() + ")";
     }
 
-    public String buildInsertNewTag(StillFaceTag tag){
+    /**
+     * Creates a query that can be used to insert a new entry of tag data into the database.
+     *
+     * @param tag The tag data object to enter into the database
+     * @return A string representing an INSERT query that puts the provided object in the database
+     */
+    public String buildInsertTag(StillFaceTag tag){
         return "INSERT INTO " + TAGS_TABLE_NAME + " " +
                 "(value) " +
                 "VALUES('" + tag.getTagValue() + "')";
     }
 
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // UPDATE statements
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates a query that can be used to update an existing entry of import data in the database.
+     *
+     * @param importData The import data object to update into the database
+     * @return A string representing an UPDATE query that puts the provided object in the database
+     */
     public String buildUpdateImport(StillFaceImport importData){
         return "UPDATE " + IMPORT_TABLE_NAME + " " +
                 "SET " +
@@ -133,6 +217,12 @@ public class StillFaceQueryBuilder {
                 "WHERE iid = " + importData.getImportID();
     }
 
+    /**
+     * Creates a query that can be used to update an existing entry of video data in the database.
+     *
+     * @param data The video data object to update into the database
+     * @return A string representing an UPDATE query that puts the provided object in the database
+     */
     public String buildUpdateCodeData(StillFaceData data){
         return "UPDATE " + DATA_TABLE_NAME + " " +
                 "SET " +
@@ -143,7 +233,13 @@ public class StillFaceQueryBuilder {
                 "WHERE did = " + data.getDataID();
     }
 
-    public String buildUpdateExistingCode(StillFaceCode code){
+    /**
+     * Creates a query that can be used to update an existing entry of code data in the database.
+     *
+     * @param code The code data object to update into the database
+     * @return A string representing an UPDATE query that puts the provided object in the database
+     */
+    public String buildUpdateCode(StillFaceCode code){
         return "UPDATE " + CODES_TABLE_NAME + " " +
                 "SET " +
                 "name = '" + code.getName() + "', " +
@@ -151,33 +247,69 @@ public class StillFaceQueryBuilder {
                 "WHERE cid = " + code.getCodeID();
     }
 
-    public String buildUpdateExistingTag(StillFaceTag tag){
+    /**
+     * Creates a query that can be used to update an existing entry of tag data in the database.
+     *
+     * @param tag The tag data object to update into the database
+     * @return A string representing an UPDATE query that puts the provided object in the database
+     */
+    public String buildUpdateTag(StillFaceTag tag){
         return "UPDATE " + TAGS_TABLE_NAME + " " +
                 "SET " +
                 "value = '" + tag.getTagValue() + "' " +
                 "WHERE tid = " + tag.getTagID();
     }
 
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // DELETE statements
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates a query that will delete the entry with the provided ID.
+     *
+     * @param importID The id of the import entry to delete. Cannot pass 0.
+     * @return A string representing the DELETE statement to remove the entry from the database
+     */
     public String buildDeleteImport(int importID) { return "DELETE FROM " + IMPORT_TABLE_NAME + " WHERE iid = " + importID; }
 
+    /**
+     * Creates a query that will delete the entry/entries with the provided ID.
+     *
+     * @param importID The id of the import entry associated with the code entries to delete. Cannot pass 0.
+     * @return A string representing the DELETE statement to remove the entry from the database
+     */
     public String buildDeleteCodeDataFromImport(int importID) { return "DELETE FROM " + DATA_TABLE_NAME + " WHERE iid = " + importID; }
 
+    /**
+     * Creates a query that will delete the entry with the provided ID.
+     *
+     * @param code The code object with the id of the code entry to delete. Cannot pass 0.
+     * @return A string representing the DELETE statement to remove the entry from the database
+     */
     public String buildDeleteCode(StillFaceCode code){
         return "DELETE FROM " + CODES_TABLE_NAME + " WHERE cid = " + code.getCodeID();
     }
 
+    /**
+     * Creates a query that will delete the entry with the provided ID.
+     *
+     * @param tag The tag object with the id of the import entry to delete. Cannot pass 0.
+     * @return A string representing the DELETE statement to remove the entry from the database
+     */
     public String buildDeleteTag(StillFaceTag tag){
         return "DELETE FROM " + TAGS_TABLE_NAME + " WHERE tid = " + tag.getTagID();
     }
 
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // CREATE TABLE statements
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates a query that will create a new table for import data in the database
+     *
+     * @param mode The mode of the type of database table to create
+     * @return A string representing a CREATE TABLE statement
+     */
     public String buildCreateSFImportTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
         return "CREATE TABLE " + IMPORT_TABLE_NAME + "\n" +
@@ -193,6 +325,12 @@ public class StillFaceQueryBuilder {
                 ")";
     }
 
+    /**
+     * Creates a query that will create a new table for video data in the database
+     *
+     * @param mode The mode of the type of database table to create
+     * @return A string representing a CREATE TABLE statement
+     */
     public String buildCreateSFDataTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
         return "CREATE TABLE " + DATA_TABLE_NAME + "\n" +
@@ -206,6 +344,12 @@ public class StillFaceQueryBuilder {
                 ")";
     }
 
+    /**
+     * Creates a query that will create a new table for code data in the database
+     *
+     * @param mode The mode of the type of database table to create
+     * @return A string representing a CREATE TABLE statement
+     */
     public String buildCreateSFCodesTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
         return "CREATE TABLE " + CODES_TABLE_NAME + "\n" +
@@ -216,6 +360,12 @@ public class StillFaceQueryBuilder {
                 ")";
     }
 
+    /**
+     * Creates a query that will create a new table for tag data in the database
+     *
+     * @param mode The mode of the type of database table to create
+     * @return A string representing a CREATE TABLE statement
+     */
     public String buildCreateSFTagsTable(DatabaseMode mode){
         String autoIncrement = getAutoIncrementSyntax(mode);
         return "CREATE TABLE " + TAGS_TABLE_NAME + "\n" +
@@ -225,7 +375,14 @@ public class StillFaceQueryBuilder {
                 ")";
     }
 
-    public String getAutoIncrementSyntax(DatabaseMode mode){
+    /**
+     * Given a database mode, this will return a String using the correct syntax for creating an auto-increment
+     * schema in a database table
+     *
+     * @param mode The DatabaseMode the syntax must conform to
+     * @return A correctly formatted, auto-increment string
+     */
+    private String getAutoIncrementSyntax(DatabaseMode mode){
         switch (mode){
             case AZURE:
                 return "IDENTITY(1,1)";
@@ -233,29 +390,42 @@ public class StillFaceQueryBuilder {
             case DERBY:
                 return "GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)";
 
-            case HSQLDB:
-                return "IDENTITY";
-
             default: return "AUTO INCREMENT";
         }
     }
 
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // DROP TABLE statements
-    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Creates a query to drop the import table in the database
+     * @return A string representation of a DROP TABLE query
+     */
     public String buildDropSFImportTable(){
         return "DROP TABLE " + IMPORT_TABLE_NAME + "";
     }
 
+    /**
+     * Creates a query to drop the data table in the database
+     * @return A string representation of a DROP TABLE query
+     */
     public String buildDropSFDataTable(){
         return "DROP TABLE " + DATA_TABLE_NAME + "";
     }
 
+    /**
+     * Creates a query to drop the code table in the database
+     * @return A string representation of a DROP TABLE query
+     */
     public String buildDropSFCodesTable(){
         return "DROP TABLE " + CODES_TABLE_NAME + "";
     }
 
+    /**
+     * Creates a query to drop the tag table in the database
+     * @return A string representation of a DROP TABLE query
+     */
     public String buildDropSFTagsTable(){
         return "DROP TABLE " + TAGS_TABLE_NAME + "";
     }

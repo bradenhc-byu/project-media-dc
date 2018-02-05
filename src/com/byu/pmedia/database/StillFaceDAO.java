@@ -1,3 +1,14 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.database;
 
 import com.byu.pmedia.config.StillFaceConfig;
@@ -14,12 +25,35 @@ import java.sql.*;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
+/**
+ * StillFaceDAO
+ * Database Access Object that provides access to the database for the rest of the program. This class can handle
+ * connections to multiple types of databases, but the primary database used in this application is the
+ * Apache Derby SQL database. Queries for the various requests are built inside the StillFaceQueryBuilder class, and
+ * this class has an instance of a query builder.
+ *
+ * @author Braden Hitchcock
+ */
 public class StillFaceDAO {
 
+    /* The database connection tied to this DAO */
     private IDatabaseConnection databaseConnection;
+
+    /* The query builder this DAO uses to get data from and make changes to the database */
     private StillFaceQueryBuilder queryBuilder = new StillFaceQueryBuilder();
+
+    /* Flag to keep track of wheter the connection to the database is 'locked', meaning that it cannot be closed.
+     * This is useful because it allows the DAO to make several calls to the database without having to establish
+     * and close connections every time. */
     private boolean connectionLocked = false;
 
+    /**
+     * Static method that constructs an instance of this object based on the configuration provided by the
+     * StillFaceConfig singleton instance. Useful for initializing DAO's inside of controllers or other external
+     * classes that only need temporary access to the DAO
+     *
+     * @return A new instance of the StillFaceDAO class constructed from configuration
+     */
     public static StillFaceDAO generateFromConfig(){
         DatabaseMode mode = DatabaseMode.valueOf(StillFaceConfig.getInstance().getAsString("database.mode"));
         String host = StillFaceConfig.getInstance().getAsString("database.host");
@@ -47,23 +81,18 @@ public class StillFaceDAO {
             case AZURE:
                 return new StillFaceDAO(new AzureDatabaseConnection(host, port, dbname, user, password));
 
-            case HSQLDB:
-                HsqlDatabaseConnection hsqlDatabaseConnection;
-
-                if(!user.equals("") && !password.equals("")){
-                    hsqlDatabaseConnection = new HsqlDatabaseConnection(filepath, dbname, user, password);
-                }
-                else{
-                    hsqlDatabaseConnection = new HsqlDatabaseConnection(filepath, dbname);
-                }
-                return new StillFaceDAO(hsqlDatabaseConnection);
-
                 default:
                     PMLogger.getInstance().error("Unable to generate DAO: unknown database mode");
                     return null;
         }
     }
 
+    /**
+     * Constructs a new instance of this class with the provided implementation of the IDatabaseConnection interface
+     *
+     * @param databaseConnection An implementation of the IDatabaseConnection interface that this instance will use to
+     *                           connect to the database
+     */
     public StillFaceDAO(IDatabaseConnection databaseConnection){
         this.databaseConnection = databaseConnection;
     }
@@ -236,7 +265,7 @@ public class StillFaceDAO {
         StillFaceModel.getInstance().unlockDatabaseConnection();
 
         // Create the query
-        String query = this.queryBuilder.buildInsertCodeData(data);
+        String query = this.queryBuilder.buildInsertData(data);
 
         // Execute the query
         try{
@@ -389,7 +418,7 @@ public class StillFaceDAO {
      */
     public int insertNewCode(StillFaceCode code){
         // Create the query
-        String query = this.queryBuilder.buildInsertNewCode(code);
+        String query = this.queryBuilder.buildInsertCode(code);
 
         // Execute the query
         try{
@@ -456,7 +485,7 @@ public class StillFaceDAO {
      */
     public boolean updateExistingCode(StillFaceCode code){
         // Create the query
-        String query = this.queryBuilder.buildUpdateExistingCode(code);
+        String query = this.queryBuilder.buildUpdateCode(code);
 
         // Execute the query
         try{
@@ -507,7 +536,7 @@ public class StillFaceDAO {
      */
     public int insertNewTag(StillFaceTag tag){
         // Create the query
-        String query = this.queryBuilder.buildInsertNewTag(tag);
+        String query = this.queryBuilder.buildInsertTag(tag);
 
         // Execute the query
         try{
@@ -573,7 +602,7 @@ public class StillFaceDAO {
      */
     public boolean updateExistingTag(StillFaceTag tag){
         // Create the query
-        String query = this.queryBuilder.buildUpdateExistingTag(tag);
+        String query = this.queryBuilder.buildUpdateTag(tag);
 
         // Execute the query
         try{
@@ -661,14 +690,6 @@ public class StillFaceDAO {
             return false;
         }
     }
-
-
-
-
-
-
-
-
 
 
     /**

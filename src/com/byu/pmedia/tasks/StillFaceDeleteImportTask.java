@@ -22,10 +22,20 @@ import javafx.concurrent.Task;
 
 import java.io.File;
 
+/**
+ * StillFaceDeleteImportTask
+ * Implementation of the IStillFaceTask interface. Wraps the execution of deleting data associated with a single
+ * import from the database into a single task. This task is executed on a separate thread from the GUI.
+ *
+ * @author Braden Hitchcock
+ */
 public class StillFaceDeleteImportTask implements IStillFaceTask {
 
+    /* The import data that has the ID reference to delete */
     private StillFaceImport importData;
+    /* The database access object used to delete the import */
     private StillFaceDAO dao;
+    /* The callback object whose implementation is provided by the user */
     private StillFaceTaskCallback callback;
 
     public StillFaceDeleteImportTask(StillFaceImport importData, StillFaceTaskCallback callback){
@@ -34,6 +44,10 @@ public class StillFaceDeleteImportTask implements IStillFaceTask {
         this.callback = callback;
     }
 
+    /**
+     * Executes the task, attempting to delete anything relating to the id of the StillFaceImport object passed in the
+     * constructor
+     */
     @Override
     public void execute() {
         Task<Void> task = new Task<Void>() {
@@ -58,6 +72,13 @@ public class StillFaceDeleteImportTask implements IStillFaceTask {
         new Thread(task).start();
     }
 
+    /**
+     * Where the deletion actually happens. Attempts to delete all data entries with an iid matching the StillFaceImport
+     * object passed in to the constructor.
+     *
+     * @throws Exception If the deletion fails, throw an exception so that the thread will execute the onFail() method
+     *                   from the callback provided by the developer
+     */
     private void onDeleteImport() throws Exception {
         PMLogger.getInstance().debug("Executing deleting import task...");
         dao.lockConnection();

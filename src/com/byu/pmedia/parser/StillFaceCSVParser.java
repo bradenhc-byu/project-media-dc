@@ -1,3 +1,14 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.parser;
 
 import com.byu.pmedia.log.PMLogger;
@@ -10,14 +21,31 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * StillFaceCSVParser
+ * Provides the ability to parse data from properly formatted CSV files into the data structures of the StillFaceModel.
+ * This also provides the ability to write data to an external file as an entire video or as summary data.
+ *
+ * @author Braden Hitchcock
+ */
 public class StillFaceCSVParser {
 
+    /* The delimiter used in reading and writing CSV files. Defaults to a comma */
     private String delimeter;
 
     public StillFaceCSVParser(){
         this.delimeter = ",";
     }
 
+    /**
+     * Reads properly formatted data from a CSV file into StillFaceData objects and creates a list of the data that
+     * can be used to write to the database.
+     *
+     * @param filename The file to read
+     * @param videoData The StillFaceVideoData object to populate with the data from the file
+     *
+     * @return True if successful, false otherwise
+     */
     public boolean parseFromCSVIntoCodedVideoData(String filename, StillFaceVideoData videoData){
 
         PMLogger.getInstance().debug("Parsing data from " + filename + " into CodedVideoDataObject");
@@ -67,6 +95,13 @@ public class StillFaceCSVParser {
         return true;
     }
 
+    /**
+     * Takes data from the provided StillFaceVideoData object and writes it to a CSV file.
+     *
+     * @param videoData The object containing information to write
+     * @param filename The name of the file to write to
+     * @return True if successful, false otherwise
+     */
     public boolean serializeToCSVFromCodedVideoData(StillFaceVideoData videoData, String filename){
 
         PMLogger.getInstance().debug("Serialize StillFaceVideoData to CSV file: " + filename);
@@ -103,8 +138,19 @@ public class StillFaceCSVParser {
         }
     }
 
-    public boolean serializeSummaryToCSVFromMaps(StillFaceCode delim1, StillFaceCode delim2,
-                                                 List<List<StillFaceCodeCount>> summary, String filename){
+    /**
+     * Given a list of summary information from a set of data objects, this will write those to a CSV file with the code
+     * delimiters provided used to separate the sections of information
+     *
+     * @param delim1 The first StillFaceCode object acting as a delimiter used in the summary data
+     * @param delim2 The second StillFaceCode object acting as a delimiter used in the summary data
+     * @param summary A list of the three summary lists to write to the file. These list contain StillFaceCodeCount
+     *                objects
+     * @param filename The name of the file to write to
+     * @return True if the serialization succeeds. False otherwise.
+     */
+    public boolean serializeSummaryToCSVFromLists(StillFaceCode delim1, StillFaceCode delim2,
+                                                  List<List<StillFaceCodeCount>> summary, String filename){
         PMLogger.getInstance().debug("Serializing maps to summary file...");
         if(summary.size() != 3){
             PMLogger.getInstance().warn("Incorrect number of summaries in list. Should be 3");
@@ -140,5 +186,4 @@ public class StillFaceCSVParser {
             return false;
         }
     }
-
 }

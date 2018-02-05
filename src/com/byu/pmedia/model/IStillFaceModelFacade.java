@@ -1,7 +1,23 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.model;
 
 import java.util.List;
 
+/**
+ * IStillFaceModelFacade
+ * This provides a facade wrapper to the data model used in the DataCenter. However, at this time, it is not currently
+ * in use in the program. Should the program grow more complex, it could be incorporated for simplicity
+ */
 public interface IStillFaceModelFacade {
 
     /**
@@ -72,16 +88,52 @@ public interface IStillFaceModelFacade {
      */
     List<StillFaceCode> getCodes(StillFaceCode code);
 
+    /**
+     * Provides access to all tags associated with data in the StillFace database
+     *
+     * @return A list of StillFaceTag objects
+     */
     List<StillFaceTag> getTags();
 
+    /**
+     * Provides access to tags that conform to constraints placed on them by the provided StillFaceTag object. The
+     * values of this object are used to query the internal data structure for matching entries.
+     *
+     * @param tag The StillFaceTag object that acts as a constrainer on the returned data
+     * @return A list of StillFaceTag objects
+     */
     List<StillFaceTag> getTags(StillFaceTag tag);
 
+    /**
+     * Updates the import data that has the same ID as the provided object
+     *
+     * @param importData the import data entry to update
+     * @return True if the update was successful, false otherwise
+     */
     boolean updateImport(StillFaceImport importData);
 
+    /**
+     * Updates the video data that has the same ID as the provided object
+     *
+     * @param data the video data entry to update
+     * @return True if the update was successful, false otherwise
+     */
     boolean updateData(StillFaceData data);
 
+    /**
+     * Updates the code data that has the same ID as the provided object
+     *
+     * @param code the code data entry to update
+     * @return True if the update was successful, false otherwise
+     */
     boolean updateCode(StillFaceCode code);
 
+    /**
+     * Updates the tag data that has the same ID as the provided object
+     *
+     * @param tag the import data entry to update
+     * @return True if the update was successful, false otherwise
+     */
     boolean updateTag(StillFaceTag tag);
 
 }

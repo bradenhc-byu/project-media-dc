@@ -1,3 +1,14 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.util;
 
 import javafx.scene.control.TextField;
@@ -7,6 +18,15 @@ import javafx.util.StringConverter;
 
 import java.lang.reflect.Field;
 
+/**
+ * NumericTextFieldTableCell
+ * Provides a method of restricting the edits to a text field table cell to only numeric characters.
+ *
+ * @param <S> The class representing the type of data displayed in the cell
+ * @param <T> The wrapper class the formatted text should be restricted to
+ *
+ * @author kleopatra on GitHub
+ */
 public class NumericTextFieldTableCell<S, T> extends TextFieldTableCell<S, T> {
 
     private TextFormatter<T> formatter;
@@ -56,6 +76,4 @@ public class NumericTextFieldTableCell<S, T> extends TextFieldTableCell<S, T> {
         }
         return null;
     }
-
-
 }

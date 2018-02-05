@@ -1,3 +1,14 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ *                            Brigham Young University - Project MEDIA StillFace DataCenter
+ * ---------------------------------------------------------------------------------------------------------------------
+ * The contents of this file contribute to the ProjectMEDIA DataCenter for managing and analyzing data obtained from the
+ * results of StillFace observational experiments.
+ *
+ * This code is free, open-source software. You may distribute or modify the code, but Brigham Young University or any
+ * parties involved in the development and production of this code as downloaded from the remote repository are not
+ * responsible for any repercussions that come as a result of the modifications.
+ */
 package com.byu.pmedia.view;
 
 import com.byu.pmedia.config.StillFaceConfig;
@@ -8,8 +19,23 @@ import com.byu.pmedia.model.StillFaceModel;
 
 import java.awt.*;
 
+/**
+ * DataCenterSplashScreen
+ * Uses Java Swing to show a small graphic and a progress bar while the application establishes a connection with the
+ * database and loads data into the internal model. The constructor of the Splash Screen attempts to make connections
+ * and configure the application. There are no other public methods available.
+ *
+ * @author Braden Hitchcock
+ */
 public class DataCenterSplashScreen {
 
+    /**
+     * Updates the visible splash screen frame with the latest progress bar length and text
+     *
+     * @param g The graphics object representing the frame
+     * @param progress The progress of the initialization
+     * @param message The message to display below the progress bar
+     */
     private void renderSplashFrame(Graphics2D g, int progress, String message){
         g.setComposite(AlphaComposite.Clear);
         g.fillRect(0, 0, 640, 400);
@@ -20,6 +46,10 @@ public class DataCenterSplashScreen {
         g.fillRect(2, 300, progress, 6);
     }
 
+    /**
+     * Constructor. After creating a new instance of the DataCenterSplashScreen, it will initialize and configure
+     * the running application. This should be called before opening the JavaFX GUI from the main client.
+     */
     public DataCenterSplashScreen(){
         final SplashScreen splash = SplashScreen.getSplashScreen();
         if (splash == null) {
@@ -62,10 +92,15 @@ public class DataCenterSplashScreen {
         }
         renderSplashFrame(g, 580, "Loading GUI Components...");
         splash.update();
-        fakeWait(900);
+        fakeWait(600);
         splash.close();
     }
 
+    /**
+     * For aesthetic purposes, provides a small delay so the user can see what is going on with the initialization
+     *
+     * @param milli Number of milliseconds to delay
+     */
     private void fakeWait(int milli){
         try{
             Thread.sleep(milli);
@@ -75,6 +110,11 @@ public class DataCenterSplashScreen {
         }
     }
 
+    /**
+     * If an error occurs, display an error notification with a message and then exits the application.
+     *
+     * @param message The message to display inside the notification
+     */
     private void exitOnError(String message){
         new StillFaceErrorNotification(message).show();
         System.exit(1);
