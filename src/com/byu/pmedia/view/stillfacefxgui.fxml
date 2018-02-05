@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
-    This XLM file provides the majority of the GUI construction and initialization for the main DataCenter GUI.
+    This XML file provides the majority of the GUI construction and initialization for the main DataCenter GUI.
     It is controlled by the DataCenterController, and additional initialization and listeners can be found there.
 
     @author Braden Hitchcock
 -->
+
 <?import javafx.scene.text.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
@@ -101,15 +103,16 @@
                       <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="52.0" prefWidth="852.0">
                            <children>
                               <Button id="buttonExportToCSV" fx:id="buttonExportToCSV" layoutX="858.0" layoutY="14.0" mnemonicParsing="false" onAction="#onExport" text="Export" />
-                              <Label id="labelDataTitle" fx:id="labelDataTitle" layoutX="14.0" layoutY="9.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="405.0">
+                              <Label id="labelDataTitle" fx:id="labelDataTitle" layoutX="14.0" layoutY="9.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="170.0">
                                  <font>
                                     <Font size="30.0" />
                                  </font></Label>
-                              <Label id="labelYear" fx:id="labelYear" layoutX="427.0" layoutY="7.0" text="Year:" />
-                              <Label fx:id="labelTag" layoutX="427.0" layoutY="31.0" text="Tag:" />
-                              <Label fx:id="labelParticipantID" layoutX="541.0" layoutY="7.0" text="Participant ID:" />
-                              <Label fx:id="labelImportDate" layoutX="541.0" layoutY="31.0" text="Import Date:" />
+                              <Label id="labelYear" fx:id="labelYear" layoutX="453.0" layoutY="7.0" text="Year:" />
+                              <Label fx:id="labelTag" layoutX="453.0" layoutY="31.0" text="Tag:" />
+                              <Label fx:id="labelParticipantID" layoutX="567.0" layoutY="7.0" text="Participant ID:" />
+                              <Label fx:id="labelImportDate" layoutX="567.0" layoutY="31.0" text="Import Date:" />
                               <Button fx:id="buttonDeleteImport" layoutX="780.0" layoutY="14.0" mnemonicParsing="false" onAction="#onDeleteImport" text="Delete" />
+                              <Label fx:id="labelAlias" layoutX="193.0" layoutY="31.0" prefHeight="15.0" prefWidth="243.0" />
                            </children>
                         </AnchorPane>
                       <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="832.0" prefWidth="947.0">

@@ -13,13 +13,13 @@ package com.byu.pmedia.model;
 
 import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.database.StillFaceDAO;
-import com.byu.pmedia.log.PMLogger;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.Query;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Logger;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
@@ -32,6 +32,9 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
  * @author Braden Hitchcock
  */
 public class StillFaceModel extends Observable {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     private StillFaceDAO dao;               // Database Access Object for the model
     private boolean cached;                 // If true, the sf_data table is cached in memory to this object at initialization
@@ -105,7 +108,7 @@ public class StillFaceModel extends Observable {
             return true;
         }
         catch (SQLException e){
-            PMLogger.getInstance().error("Error initializing model: " + e.getMessage());
+            logger.severe("Error initializing model: " + e.getMessage());
             return false;
         }
     }
@@ -268,7 +271,7 @@ public class StillFaceModel extends Observable {
                 return true;
             }
         }
-        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh imports");
+        if(!this.initialized || this.cached) logger.warning("Failed to refresh imports");
         return !this.cached;
     }
 
@@ -288,7 +291,7 @@ public class StillFaceModel extends Observable {
             }
 
         }
-        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh data");
+        if(!this.initialized || this.cached) logger.warning("Failed to refresh data");
         return !this.cached;
     }
 
@@ -308,7 +311,7 @@ public class StillFaceModel extends Observable {
                 return true;
             }
         }
-        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh codes");
+        if(!this.initialized || this.cached) logger.warning("Failed to refresh codes");
         return !this.cached;
     }
 
@@ -328,7 +331,7 @@ public class StillFaceModel extends Observable {
                 return true;
             }
         }
-        if(!this.initialized || this.cached) PMLogger.getInstance().warn("Failed to refresh tags");
+        if(!this.initialized || this.cached) logger.warning("Failed to refresh tags");
         return !this.cached;
     }
 

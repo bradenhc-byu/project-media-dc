@@ -13,6 +13,8 @@ package com.byu.pmedia.database;
 
 import com.byu.pmedia.config.StillFaceConfig;
 
+import java.util.logging.Logger;
+
 /**
  * StillFaceDatabaseInitializer
  * Provides a wrapper for the functionality that checks to make sure the required database structure exists on the
@@ -21,6 +23,9 @@ import com.byu.pmedia.config.StillFaceConfig;
  * @author Braden Hitchcock
  */
 public class StillFaceDatabaseInitializer {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The internal database access object that is used to verify the structure of the database on the connection
      * and initialize the database*/
@@ -38,6 +43,7 @@ public class StillFaceDatabaseInitializer {
      * @return True if the initialization was successful. False otherwise.
      */
     public boolean initialize(DatabaseMode mode){
+        logger.info("Initializing database: " + mode.toPrettyString());
         switch(mode){
             case DERBY:
                 return initializeDerbyDatabase();

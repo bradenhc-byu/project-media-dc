@@ -17,6 +17,7 @@ import com.byu.pmedia.model.StillFaceModel;
 import javafx.concurrent.Task;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * StillFaceSaveTask
@@ -26,6 +27,9 @@ import java.util.Map;
  * @author Braden Hitchcock
  */
 public class StillFaceSaveTask implements IStillFaceTask {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* An implementation of the callback methods provided by the developer */
     private StillFaceTaskCallback callback;
@@ -73,11 +77,13 @@ public class StillFaceSaveTask implements IStillFaceTask {
      *                   the developer's implementation of the onFail() method.
      */
     private void saveData() throws Exception {
+        logger.info("Beginning save data task...");
         Map<Integer, StillFaceData> dataMap = StillFaceModel.getInstance().getEditedDataMap();
         if(StillFaceModel.getInstance().getEditedDataMap().size() != 0){
             for(int key : dataMap.keySet()){
                 boolean success = dao.updateCodeData(dataMap.get(key));
                 if(!success){
+                    logger.warning("Save data task fail");
                     throw new Exception("Failed to update data in database. See log for more details.");
                 }
             }

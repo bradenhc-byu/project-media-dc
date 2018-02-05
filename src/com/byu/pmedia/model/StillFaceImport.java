@@ -57,6 +57,8 @@ public class StillFaceImport {
             attribute("alias", StillFaceImport::getAlias);
     public static final Attribute<StillFaceImport, Date> DATE =
             attribute("date", StillFaceImport::getDate);
+    public static final Attribute<StillFaceImport, String> PID =
+            attribute("pid", StillFaceImport::getPid);
 
     public StillFaceImport(int importID, String filename, int year, int familyID, int participantNumber,
                            StillFaceTag tag, String alias, Date date) {
@@ -68,7 +70,7 @@ public class StillFaceImport {
         this.tag = tag;
         this.alias = alias;
         this.date = date;
-        this.pid = String.format("%d-%d-%d", this.year, this.familyID, this.participantNumber);
+        this.pid = String.format("%d-%03d-%02d", this.year, this.familyID, this.participantNumber);
     }
 
     public StillFaceImport(String filename, int year, int familyID, int participantNumber,
@@ -149,6 +151,6 @@ public class StillFaceImport {
 
     @Override
     public String toString(){
-        return String.format("(%s): %s", alias, filename);
+        return String.format("%s : %s - %s [%s]", pid, tag, alias,date);
     }
 }

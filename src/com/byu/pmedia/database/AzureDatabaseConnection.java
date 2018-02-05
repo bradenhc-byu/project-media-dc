@@ -11,9 +11,8 @@
  */
 package com.byu.pmedia.database;
 
-import com.byu.pmedia.log.PMLogger;
-
 import java.sql.*;
+import java.util.logging.Logger;
 
 /**
  * AzureDatabaseConnection
@@ -23,6 +22,9 @@ import java.sql.*;
  * @author Braden Hitchcock
  */
 public class AzureDatabaseConnection implements IDatabaseConnection {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The host IP address, or 'localhost' */
     private String hostname;
@@ -78,12 +80,12 @@ public class AzureDatabaseConnection implements IDatabaseConnection {
             this.connection = DriverManager.getConnection(this.url);
             String schema = this.connection.getSchema();
 
-            PMLogger.getInstance().info("Database connection successful");
-            PMLogger.getInstance().debug("Connection schema: " + schema);
+            logger.info("Database connection successful");
+            logger.fine("Connection schema: " + schema);
 
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Failed to establish database connection, SQL error code: " + e.getErrorCode());
+            logger.severe("Failed to establish database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
             throw e;
         }
@@ -99,16 +101,16 @@ public class AzureDatabaseConnection implements IDatabaseConnection {
      * @throws SQLException Thrown if an error was encountered while trying to close the database connection
      */
     public boolean close() throws SQLException {
-        PMLogger.getInstance().info("Closing database connection");
+        logger.info("Closing database connection");
         try{
             if(this.connectionEstablished) this.connection.close();
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Failed to close database connection, SQL error code: " + e.getErrorCode());
+            logger.severe("Failed to close database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
             throw e;
         }
-        PMLogger.getInstance().info("Database connection closed successfully");
+        logger.info("Database connection closed successfully");
         this.connectionEstablished = false;
         return true;
     }

@@ -11,7 +11,6 @@
  */
 package com.byu.pmedia.parser;
 
-import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceCode;
 import com.byu.pmedia.model.StillFaceCodeCount;
 import com.byu.pmedia.model.StillFaceData;
@@ -19,7 +18,7 @@ import com.byu.pmedia.model.StillFaceVideoData;
 
 import java.io.*;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * StillFaceCSVParser
@@ -29,6 +28,9 @@ import java.util.Map;
  * @author Braden Hitchcock
  */
 public class StillFaceCSVParser {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The delimiter used in reading and writing CSV files. Defaults to a comma */
     private String delimeter;
@@ -48,7 +50,7 @@ public class StillFaceCSVParser {
      */
     public boolean parseFromCSVIntoCodedVideoData(String filename, StillFaceVideoData videoData){
 
-        PMLogger.getInstance().debug("Parsing data from " + filename + " into CodedVideoDataObject");
+        logger.fine("Parsing data from " + filename + " into CodedVideoDataObject");
 
         try{
             // Create a new buffered reader to read the CSV file
@@ -74,7 +76,7 @@ public class StillFaceCSVParser {
                             data[3]));
                 }
                 catch(NumberFormatException e){
-                    PMLogger.getInstance().debug("Detected possible CSV header, skipping...");
+                    logger.fine("Detected possible CSV header, skipping...");
                 }
 
             }
@@ -82,15 +84,15 @@ public class StillFaceCSVParser {
             br.close();
         }
         catch(FileNotFoundException e){
-            PMLogger.getInstance().error("Could not read file, file not found: " + filename);
+            logger.severe("Could not read file, file not found: " + filename);
             return false;
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Caught IOException: " + e.getMessage());
+            logger.severe("Caught IOException: " + e.getMessage());
             return false;
         }
 
-        PMLogger.getInstance().debug("Parsing complete");
+        logger.fine("Parsing complete");
 
         return true;
     }
@@ -104,7 +106,7 @@ public class StillFaceCSVParser {
      */
     public boolean serializeToCSVFromCodedVideoData(StillFaceVideoData videoData, String filename){
 
-        PMLogger.getInstance().debug("Serialize StillFaceVideoData to CSV file: " + filename);
+        logger.fine("Serialize StillFaceVideoData to CSV file: " + filename);
 
         try{
 
@@ -125,15 +127,15 @@ public class StillFaceCSVParser {
             }
 
             bw.close();
-            PMLogger.getInstance().debug("Serialization complete");
+            logger.fine("Serialization complete");
             return true;
         }
         catch(FileNotFoundException e){
-            PMLogger.getInstance().error("Could not write to file, file not found: " + filename);
+            logger.severe("Could not write to file, file not found: " + filename);
             return false;
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Caught IOException: " + e.getMessage());
+            logger.severe("Caught IOException: " + e.getMessage());
             return false;
         }
     }
@@ -151,9 +153,9 @@ public class StillFaceCSVParser {
      */
     public boolean serializeSummaryToCSVFromLists(StillFaceCode delim1, StillFaceCode delim2,
                                                   List<List<StillFaceCodeCount>> summary, String filename){
-        PMLogger.getInstance().debug("Serializing maps to summary file...");
+        logger.fine("Serializing maps to summary file...");
         if(summary.size() != 3){
-            PMLogger.getInstance().warn("Incorrect number of summaries in list. Should be 3");
+            logger.warning("Incorrect number of summaries in list. Should be 3");
             return false;
         }
         try{
@@ -173,16 +175,16 @@ public class StillFaceCSVParser {
             }
 
             bw.close();
-            PMLogger.getInstance().debug("Finished serializing summary data to file");
+            logger.fine("Finished serializing summary data to file");
             return true;
 
         }
         catch(FileNotFoundException e){
-            PMLogger.getInstance().error("Could not write to file, file not found: " + filename);
+            logger.severe("Could not write to file, file not found: " + filename);
             return false;
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Caught IOException: " + e.getMessage());
+            logger.severe("Caught IOException: " + e.getMessage());
             return false;
         }
     }

@@ -12,15 +12,11 @@
 package com.byu.pmedia.tasks;
 
 import com.byu.pmedia.database.StillFaceDAO;
-import com.byu.pmedia.log.PMLogger;
-import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceImport;
 import com.byu.pmedia.model.StillFaceModel;
-import com.byu.pmedia.model.StillFaceVideoData;
-import com.byu.pmedia.parser.StillFaceCSVParser;
 import javafx.concurrent.Task;
 
-import java.io.File;
+import java.util.logging.Logger;
 
 /**
  * StillFaceDeleteImportTask
@@ -30,6 +26,9 @@ import java.io.File;
  * @author Braden Hitchcock
  */
 public class StillFaceDeleteImportTask implements IStillFaceTask {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The import data that has the ID reference to delete */
     private StillFaceImport importData;
@@ -80,15 +79,15 @@ public class StillFaceDeleteImportTask implements IStillFaceTask {
      *                   from the callback provided by the developer
      */
     private void onDeleteImport() throws Exception {
-        PMLogger.getInstance().debug("Executing deleting import task...");
+        logger.fine("Executing deleting import task...");
         dao.lockConnection();
         boolean success = dao.cleanImportData(importData.getImportID());
         if(success){
-            PMLogger.getInstance().debug("Delete import task completed...");
+            logger.fine("Delete import task completed...");
             StillFaceModel.getInstance().refresh();
         }
         else{
-            PMLogger.getInstance().error("Unable to delete import data from database");
+            logger.severe("Unable to delete import data from database");
             throw new Exception("Import failed while loading file information");
         }
         dao.unlockConnection();

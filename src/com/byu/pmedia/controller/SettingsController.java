@@ -14,10 +14,7 @@ package com.byu.pmedia.controller;
 import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.database.DatabaseMode;
 import com.byu.pmedia.database.StillFaceDAO;
-import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.*;
-import com.byu.pmedia.view.ConfirmAction;
-import com.byu.pmedia.view.StillFaceConfirmNotification;
 import com.byu.pmedia.view.StillFaceErrorNotification;
 import com.byu.pmedia.view.StillFaceWarningNotification;
 import com.googlecode.cqengine.query.Query;
@@ -36,6 +33,7 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.*;
+import java.util.logging.Logger;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
@@ -54,6 +52,9 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
  * @author Braden Hitchcock
  */
 public class SettingsController implements Initializable, Observer {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The GUI elements associated with this controller are listed below.
      * Their names should be self describing. */
@@ -104,11 +105,13 @@ public class SettingsController implements Initializable, Observer {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
+        logger.info("Initializing settings GUI controller");
+
         this.dao = StillFaceDAO.generateFromConfig();
 
         // Set available modes
         choiceBoxDBMode.setItems(FXCollections.observableArrayList(DatabaseMode.DERBY.toPrettyString(),
-                DatabaseMode.AZURE.toPrettyString(), DatabaseMode.HSQLDB.toPrettyString() ));
+                DatabaseMode.AZURE.toPrettyString() ));
 
         textFieldDBHost.setText(StillFaceConfig.getInstance().getAsString("database.host"));
         textFieldDBPort.setText(StillFaceConfig.getInstance().getAsString("database.port"));
@@ -286,7 +289,7 @@ public class SettingsController implements Initializable, Observer {
             StillFaceConfig.getInstance().setWithBoolean("model.cache", checkboxDataCache.isSelected());
             boolean success = StillFaceConfig.getInstance().save();
             if (!success) {
-                PMLogger.getInstance().error("Unable to successfully save configuration.");
+                logger.severe("Unable to successfully save configuration.");
                 new StillFaceErrorNotification("Failed to save settings. See log for details.").show();
             }
             else {
@@ -339,7 +342,7 @@ public class SettingsController implements Initializable, Observer {
                 String message = "An error has occurred in connecting with the database. We were unable to save the new" +
                         "code.";
                 new StillFaceErrorNotification(message).show();
-                PMLogger.getInstance().error("Could not add code");
+                logger.severe("Could not add code");
             }
             else{
                 StillFaceModel.getInstance().refreshCodes();
@@ -371,7 +374,7 @@ public class SettingsController implements Initializable, Observer {
                 String message = "An error has occurred in connecting with the database. We were unable to save the" +
                         "new tag.";
                 new StillFaceErrorNotification(message).show();
-                PMLogger.getInstance().error("Could not add tag");
+                logger.severe("Could not add tag");
             }
             else{
                 StillFaceModel.getInstance().refreshTags();

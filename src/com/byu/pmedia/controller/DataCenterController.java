@@ -11,7 +11,6 @@
  */
 package com.byu.pmedia.controller;
 
-import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.*;
 import com.byu.pmedia.tasks.*;
 import com.byu.pmedia.util.NumericTextFieldTableCell;
@@ -55,6 +54,7 @@ import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.*;
 import java.util.function.UnaryOperator;
+import java.util.logging.Logger;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
@@ -66,6 +66,9 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
  * @author Braden Hitchcock
  */
 public class DataCenterController implements Initializable, Observer {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* These variables are linked to an FXML stylesheet to generate the view for which this
     * controller is used.
@@ -105,6 +108,7 @@ public class DataCenterController implements Initializable, Observer {
     @FXML private Label labelBeforeDelimiter1;
     @FXML private Label labelAfterDelimiter1;
     @FXML private Label labelAfterDelimiter2;
+    @FXML private Label labelAlias;
 
 
     // Initialize the table columns here, so that they can be accessed throughout the class
@@ -122,7 +126,9 @@ public class DataCenterController implements Initializable, Observer {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
+        
+        logger.info("Initializing main DataCenter GUI");
+        
         initializeDataTable();
 
         initializeSummaryTables();
@@ -145,7 +151,7 @@ public class DataCenterController implements Initializable, Observer {
             public void changed(ObservableValue<? extends StillFaceImport> observable,
                                 StillFaceImport oldValue, StillFaceImport newValue) {
                 if(newValue != null){
-                    PMLogger.getInstance().debug("Detected list view item change");
+                    logger.fine("Detected list view item change");
                     populateVisibleDataFromImport(newValue.getImportID());
                 }
 
@@ -349,7 +355,7 @@ public class DataCenterController implements Initializable, Observer {
             stage.showAndWait();
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Unable to open import dialogue: " + e.getMessage());
+            logger.severe("Unable to open import dialogue: " + e.getMessage());
         }
     }
 
@@ -370,7 +376,7 @@ public class DataCenterController implements Initializable, Observer {
             stage.showAndWait();
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Unable to open settings dialogue: " + e.getMessage());
+            logger.severe("Unable to open settings dialogue: " + e.getMessage());
         }
     }
 
@@ -489,7 +495,8 @@ public class DataCenterController implements Initializable, Observer {
     @FXML
     private void onDeleteImport(ActionEvent actionEvent) {
         StillFaceImport importToDelete = (StillFaceImport)listViewExplorer.getSelectionModel().getSelectedItem();
-        new StillFaceConfirmNotification("Are you sure you want to delete " + importToDelete.getAlias() +"?",
+        new StillFaceConfirmNotification(String.format("Are you sure you want to delete %s (%s)?",
+                importToDelete.getPid(), importToDelete.getAlias()),
                 new ConfirmAction() {
                     @Override
                     public void onOK() {
@@ -520,7 +527,7 @@ public class DataCenterController implements Initializable, Observer {
      * @param importID The ID of the import that was selected by the user
      */
     private void populateVisibleDataFromImport(int importID){
-        PMLogger.getInstance().info("Populating visible data with import id: " + importID);
+        logger.info("Populating visible data with import id: " + importID);
         // First get the import information
         Query<StillFaceImport> importDataQuery = equal(StillFaceImport.IMPORT_ID, importID);
         for(StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery)){
@@ -535,7 +542,7 @@ public class DataCenterController implements Initializable, Observer {
             dataList.add(d);
         }
 
-        PMLogger.getInstance().info("Initialized visible data list: " + dataList.size() + " elements");
+        logger.info("Initialized visible data list: " + dataList.size() + " elements");
 
         // Set the list in the model
         StillFaceModel.getInstance().setVisibleData(dataList);
@@ -550,7 +557,7 @@ public class DataCenterController implements Initializable, Observer {
      * have changed.
      */
     private void populateVisibleDataFromQuery(){
-        PMLogger.getInstance().info("Populating visible data from search query");
+        logger.info("Populating visible data from search query");
         // Build the query based on the parameters put in by the user
         List<StillFaceData> dataList = new ArrayList<>();
         Query<StillFaceImport> importQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
@@ -575,7 +582,7 @@ public class DataCenterController implements Initializable, Observer {
                 queryOptions(orderBy(ascending(StillFaceData.DATA_ID))))){
             dataList.add(d);
         }
-        PMLogger.getInstance().info("Initialized visible data list: " + dataList.size() + " elements");
+        logger.info("Initialized visible data list: " + dataList.size() + " elements");
         // Update the values
         StillFaceModel.getInstance().setVisibleImport(null);
         StillFaceModel.getInstance().setVisibleData(dataList);
@@ -700,7 +707,7 @@ public class DataCenterController implements Initializable, Observer {
      */
     private void updateImports(){
         // Get the import data
-        PMLogger.getInstance().debug("Updating the import list view");
+        logger.fine("Updating the import list view");
         Query<StillFaceImport> importDataQuery = not(equal(StillFaceImport.IMPORT_ID, 0));
         List<StillFaceImport> importDataList = new ArrayList<>();
         for (StillFaceImport data : StillFaceModel.getInstance().getImportDataCollection().retrieve(importDataQuery,
@@ -708,7 +715,7 @@ public class DataCenterController implements Initializable, Observer {
             importDataList.add(data);
         }
         if(importDataList.size() > listViewExplorer.getItems().size() || importDataList.size() < listViewExplorer.getItems().size()){
-            PMLogger.getInstance().debug("Import list view size: " + importDataList.size());
+            logger.fine("Import list view size: " + importDataList.size());
             Platform.runLater(() -> {
                 int i = listViewExplorer.getSelectionModel().getSelectedIndex();
                 listViewExplorer.setItems(FXCollections.observableArrayList(importDataList));
@@ -733,6 +740,7 @@ public class DataCenterController implements Initializable, Observer {
                 tableViewAfterDelimiter1.setItems(null);
                 tableViewAfterDelimiter2.setItems(null);
                 labelDataTitle.setText("");
+                labelAlias.setText("");
                 labelYear.setText("Year:");
                 labelTag.setText("Tag:");
                 labelParticipantID.setText("Participant ID:");
@@ -745,17 +753,19 @@ public class DataCenterController implements Initializable, Observer {
             return;
         }
 
-        PMLogger.getInstance().info("Filling table with visible data");
+        logger.info("Filling table with visible data");
 
         // Set the labels in the header
         StillFaceImport visibleImport = StillFaceModel.getInstance().getVisibleImport();
-        String dataTitle = (visibleImport != null) ? visibleImport.getAlias() : "Search Results";
+        String dataTitle = (visibleImport != null) ? visibleImport.getPid() : "Search Results";
+        String alias = (visibleImport != null) ? visibleImport.getAlias() : "";
         String year = "Year: " + ((visibleImport != null) ? visibleImport.getYear() : "");
         String tag = "Tag: " + ((visibleImport != null) ? visibleImport.getTag().getTagValue() : "");
         String pid = "Participant ID: " + ((visibleImport != null) ? visibleImport.getParticipantNumber() : "");
         String date = "Import Date: " + ((visibleImport != null) ? visibleImport.getDate().toString() : "");
         Platform.runLater(() -> {
             labelDataTitle.setText(dataTitle);
+            labelAlias.setText(alias);
             labelYear.setText(year);
             labelTag.setText(tag);
             labelParticipantID.setText(pid);
@@ -820,13 +830,13 @@ public class DataCenterController implements Initializable, Observer {
 
         }
 
-        PMLogger.getInstance().info("Table data size: " + StillFaceModel.getInstance().getVisibleDataList().size());
+        logger.info("Table data size: " + StillFaceModel.getInstance().getVisibleDataList().size());
 
         // Set the items in the view
         ObservableList<StillFaceData> data = FXCollections.observableArrayList(dataList);
         tableData.setItems(data);
 
-        PMLogger.getInstance().debug("Gathering summary data");
+        logger.fine("Gathering summary data");
         // Put in some summary data
         Map.Entry<String, Integer> maxEntry = null;
         for(Map.Entry<String, Integer> entry : mostCommonCode.entrySet()){
@@ -865,7 +875,7 @@ public class DataCenterController implements Initializable, Observer {
         });
 
 
-        PMLogger.getInstance().debug("Finished updating table data");
+        logger.fine("Finished updating table data");
 
     }
 

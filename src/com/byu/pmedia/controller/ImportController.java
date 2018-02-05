@@ -28,6 +28,7 @@ import java.io.File;
 import java.net.URL;
 import java.sql.Date;
 import java.util.ResourceBundle;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +40,9 @@ import java.util.regex.Pattern;
  * @author Braden Hitchcock
  */
 public class ImportController implements Initializable {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* Below are the GUI elements for this controller. Their purposes should be self-documenting in their names. */
     @FXML private Button buttonChooseFile;
@@ -74,6 +78,9 @@ public class ImportController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
+        logger.info("Initializing import GUI controller");
+
         progressIndicator.setVisible(false);
         buttonImport.setDisable(true);
     }
@@ -90,6 +97,7 @@ public class ImportController implements Initializable {
         this.fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         this.chosenFile = fileChooser.showOpenDialog(null);
         if(this.chosenFile != null){
+            logger.fine("File chosen for import: " + chosenFile.getName());
             this.textFieldChosenFile.setText(chosenFile.getName());
             extractFileNameData(this.chosenFile.getName());
             this.choiceBoxTag.setItems(FXCollections.observableArrayList(StillFaceModel.getTagList()));
@@ -174,6 +182,7 @@ public class ImportController implements Initializable {
      * create a new import entry in the database and import all the data from that file
      */
     private void doImport(){
+        logger.info("Importing CSV file");
         // Disable some GUI elements so this can't happen more than once at a time
         buttonImport.setDisable(true);
         // Let the user know the program is working

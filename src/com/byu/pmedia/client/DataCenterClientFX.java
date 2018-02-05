@@ -11,6 +11,7 @@
  */
 package com.byu.pmedia.client;
 
+import com.byu.pmedia.log.PMLoggerInitializer;
 import com.byu.pmedia.model.StillFaceModel;
 import com.byu.pmedia.tasks.StillFaceSaveTask;
 import com.byu.pmedia.tasks.StillFaceSyncTask;
@@ -52,6 +53,9 @@ public class DataCenterClientFX extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
+        // Initialize the logger
+        PMLoggerInitializer.setup();
+
         // Show splash screen while initializing
         DataCenterSplashScreen splashScreen = new DataCenterSplashScreen();
 

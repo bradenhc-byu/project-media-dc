@@ -12,7 +12,7 @@
 package com.byu.pmedia.database;
 
 import com.byu.pmedia.config.StillFaceConfig;
-import com.byu.pmedia.log.PMLogger;
+import com.byu.pmedia.log.PMLoggerInitializer;
 import com.byu.pmedia.model.*;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
@@ -22,6 +22,7 @@ import com.googlecode.cqengine.index.radix.RadixTreeIndex;
 import com.googlecode.cqengine.query.Query;
 
 import java.sql.*;
+import java.util.logging.Logger;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
@@ -35,6 +36,9 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
  * @author Braden Hitchcock
  */
 public class StillFaceDAO {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The database connection tied to this DAO */
     private IDatabaseConnection databaseConnection;
@@ -63,7 +67,7 @@ public class StillFaceDAO {
         String password = StillFaceConfig.getInstance().getAsString("database.password");
         String filepath = StillFaceConfig.getInstance().getAsString("database.filepath");
         if(mode == null){
-            PMLogger.getInstance().error("Unable to generate DAO: config mode is null");
+            logger.severe("Unable to generate DAO: config mode is null");
             return null;
         }
         switch (mode){
@@ -82,7 +86,7 @@ public class StillFaceDAO {
                 return new StillFaceDAO(new AzureDatabaseConnection(host, port, dbname, user, password));
 
                 default:
-                    PMLogger.getInstance().error("Unable to generate DAO: unknown database mode");
+                    logger.severe("Unable to generate DAO: unknown database mode");
                     return null;
         }
     }
@@ -124,7 +128,7 @@ public class StillFaceDAO {
             return generatedKey;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to insert import data: " + e.getMessage() + "\n" + query);
+            logger.severe("Unable to insert import data: " + e.getMessage() + "\n" + query);
             return -1;
         }
     }
@@ -178,7 +182,7 @@ public class StillFaceDAO {
             return importDataCollection;
         }
         catch (SQLException e){
-            PMLogger.getInstance().error("Could not get import data: " + e.getMessage());
+            logger.severe("Could not get import data: " + e.getMessage());
             return null;
         }
 
@@ -205,7 +209,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to update import data: " + e.getMessage());
+            logger.severe("Unable to update import data: " + e.getMessage());
             return false;
         }
     }
@@ -230,7 +234,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to update import data: " + e.getMessage());
+            logger.severe("Unable to update import data: " + e.getMessage());
             return false;
         }
     }
@@ -257,7 +261,7 @@ public class StillFaceDAO {
             // Insert the new value into the DB
             int key = insertNewCode(data.getCode());
             if(key < 0){
-                PMLogger.getInstance().error("Failed to create new code entry for unknown code");
+                logger.severe("Failed to create new code entry for unknown code");
                 return -1;
             }
             data.getCode().setCodeID(key);
@@ -282,7 +286,7 @@ public class StillFaceDAO {
             return generatedKey;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to insert code data: " + e.getMessage());
+            logger.severe("Unable to insert code data: " + e.getMessage());
             return -1;
         }
     }
@@ -330,7 +334,7 @@ public class StillFaceDAO {
             return dataCollection;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to retrieve code data: " + e.getMessage());
+            logger.severe("Unable to retrieve code data: " + e.getMessage());
             return null;
         }
     }
@@ -378,7 +382,7 @@ public class StillFaceDAO {
             return dataCollection;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to retrieve code data: " + e.getMessage());
+            logger.severe("Unable to retrieve code data: " + e.getMessage());
             return null;
         }
     }
@@ -403,7 +407,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to update code data: " + e.getMessage());
+            logger.severe("Unable to update code data: " + e.getMessage());
             return false;
         }
     }
@@ -435,7 +439,7 @@ public class StillFaceDAO {
             return generatedKey;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to insert new code: " + e.getMessage());
+            logger.severe("Unable to insert new code: " + e.getMessage());
             return -1;
         }
     }
@@ -471,7 +475,7 @@ public class StillFaceDAO {
             return codeCollection;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to retrieve code: " + e.getMessage());
+            logger.severe("Unable to retrieve code: " + e.getMessage());
             return null;
         }
     }
@@ -496,7 +500,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to update code: " + e.getMessage());
+            logger.severe("Unable to update code: " + e.getMessage());
             return false;
         }
     }
@@ -521,7 +525,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to delete code: " + e.getMessage());
+            logger.severe("Unable to delete code: " + e.getMessage());
             return false;
         }
     }
@@ -553,7 +557,7 @@ public class StillFaceDAO {
             return generatedKey;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to insert new tag: " + e.getMessage());
+            logger.severe("Unable to insert new tag: " + e.getMessage());
             return -1;
         }
     }
@@ -588,7 +592,7 @@ public class StillFaceDAO {
             return tagCollection;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to retrieve tag information: " + e.getMessage());
+            logger.severe("Unable to retrieve tag information: " + e.getMessage());
             return null;
         }
     }
@@ -613,7 +617,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to update tag: " + e.getMessage());
+            logger.severe("Unable to update tag: " + e.getMessage());
             return false;
         }
     }
@@ -638,7 +642,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to delete tag: " + e.getMessage());
+            logger.severe("Unable to delete tag: " + e.getMessage());
             return false;
         }
     }
@@ -662,7 +666,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to create database table: " + e.getMessage());
+            logger.severe("Unable to create database table: " + e.getMessage());
             return false;
         }
     }
@@ -686,7 +690,7 @@ public class StillFaceDAO {
             return true;
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Unable to drop database table: " + e.getMessage());
+            logger.severe("Unable to drop database table: " + e.getMessage());
             return false;
         }
     }
@@ -703,7 +707,7 @@ public class StillFaceDAO {
                 this.databaseConnection.establish();
             }
             catch(SQLException e){
-                PMLogger.getInstance().error("DAO unable to open database connection");
+                logger.severe("DAO unable to open database connection");
                 throw e;
             }
         }
@@ -720,7 +724,7 @@ public class StillFaceDAO {
                 this.databaseConnection.close();
             }
             catch(SQLException e){
-                PMLogger.getInstance().error("DAO unable to close database connection");
+                logger.severe("DAO unable to close database connection");
                 throw e;
             }
         }
@@ -759,7 +763,7 @@ public class StillFaceDAO {
             return true;
         }
         catch (SQLException e){
-            PMLogger.getInstance().error("Caught exception checking database status: " + e.getMessage());
+            logger.severe("Caught exception checking database status: " + e.getMessage());
             return false;
         }
     }

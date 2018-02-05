@@ -16,6 +16,8 @@ import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceImport;
 import com.byu.pmedia.model.StillFaceTag;
 
+import java.util.logging.Logger;
+
 /**
  * StillFaceQueryBuilder
  * Responsible for building the SQL queries used to access and modify information in the database. Given different
@@ -25,6 +27,9 @@ import com.byu.pmedia.model.StillFaceTag;
  * @author Braden Hitchcock
  */
 public class StillFaceQueryBuilder {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* Constants defining the table names in the database structure */
     private final String IMPORT_TABLE_NAME = "sf_imports";

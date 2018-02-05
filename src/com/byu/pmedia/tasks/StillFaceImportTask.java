@@ -12,7 +12,6 @@
 package com.byu.pmedia.tasks;
 
 import com.byu.pmedia.database.StillFaceDAO;
-import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceData;
 import com.byu.pmedia.model.StillFaceImport;
 import com.byu.pmedia.model.StillFaceModel;
@@ -21,6 +20,7 @@ import com.byu.pmedia.parser.StillFaceCSVParser;
 import javafx.concurrent.Task;
 
 import java.io.File;
+import java.util.logging.Logger;
 
 /**
  * StillFaceImportTask
@@ -30,6 +30,9 @@ import java.io.File;
  * @author Braden Hitchcock
  */
 public class StillFaceImportTask implements IStillFaceTask {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The file to import data from (CSV) */
     private File importFile;
@@ -85,13 +88,13 @@ public class StillFaceImportTask implements IStillFaceTask {
      *                   developer's provided onFail() implementation to be called
      */
     private void onImportFromFile() throws Exception {
-        PMLogger.getInstance().debug("Performing import task...");
+        logger.fine("Performing import task...");
         StillFaceVideoData videoData = new StillFaceVideoData();
         new StillFaceCSVParser().parseFromCSVIntoCodedVideoData(importFile.getAbsolutePath(), videoData);
         dao.lockConnection();
         int key = dao.insertImportData(importData);
         if(key > 0){
-            PMLogger.getInstance().debug("Import entry created, importing data...");
+            logger.fine("Import entry created, importing data...");
             for(StillFaceData data : videoData.getData()){
                 data.setImportID(key);
                 int dKey = dao.insertCodeData(data);
@@ -103,10 +106,10 @@ public class StillFaceImportTask implements IStillFaceTask {
             StillFaceModel.getInstance().refreshImportData();
             StillFaceModel.getInstance().refreshCodeData();
             StillFaceModel.getInstance().refreshCodes();
-            PMLogger.getInstance().debug("Import task completed");
+            logger.fine("Import task completed");
         }
         else{
-            PMLogger.getInstance().error("Unable to insert data into database");
+            logger.severe("Unable to insert data into database");
             throw new Exception("Import failed while loading file information");
         }
         dao.unlockConnection();

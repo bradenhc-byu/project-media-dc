@@ -11,11 +11,12 @@
  */
 package com.byu.pmedia.config;
 
-import com.byu.pmedia.log.PMLogger;
+import com.byu.pmedia.log.PMLoggerInitializer;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * StillFaceConfig
@@ -30,6 +31,9 @@ import java.util.Map;
  * @author Braden Hitchcock
  */
 public class StillFaceConfig {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The default path to the config file. From the applicatoin root, it looks for an etc/ directory where the
     * config file(s) should be located. */
@@ -86,7 +90,7 @@ public class StillFaceConfig {
             return true;
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Unable to initialize configuration: " + e.getMessage());
+            System.err.println("Unable to initialize configuration: " + e.getMessage());
             return false;
         }
     }
@@ -99,9 +103,9 @@ public class StillFaceConfig {
      * @return True if the configurations are saved successfully. False otherwise.
      */
     public boolean save(){
-        PMLogger.getInstance().info("Saving configuration to file");
+        logger.info("Saving configuration to file");
         if(this.filename == null || this.filename.equals("")){
-            PMLogger.getInstance().warn("Failed to save configuration. Invalid filename: " + filename);
+            logger.warning("Failed to save configuration. Invalid filename: " + filename);
             return false;
         }
         StringBuilder line = new StringBuilder();
@@ -115,12 +119,12 @@ public class StillFaceConfig {
                 line.trimToSize();
             }
             bw.close();
-            PMLogger.getInstance().info("Configuration successfully saved");
+            logger.info("Configuration successfully saved");
             return true;
 
         }
         catch(IOException e){
-            PMLogger.getInstance().error("Unable to save configuration: " + e.getMessage());
+            logger.severe("Unable to save configuration: " + e.getMessage());
             return false;
         }
     }
@@ -147,14 +151,14 @@ public class StillFaceConfig {
         int value = -1;
         try{
             if(!this.configuration.containsKey(key)){
-                PMLogger.getInstance().error("Failed to get configuration: key not in map");
+                logger.severe("Failed to get configuration: key not in map");
                 return value;
             }
             value = Integer.parseInt(this.configuration.get(key));
             return value;
         }
         catch(NumberFormatException e){
-            PMLogger.getInstance().error("Failed to get integer configuration: " + e.getMessage());
+            logger.severe("Failed to get integer configuration: " + e.getMessage());
             return value;
         }
     }
@@ -208,7 +212,7 @@ public class StillFaceConfig {
             return false;
         }
         else{
-            PMLogger.getInstance().error("Unable to get config boolean value: " + value);
+            logger.severe("Unable to get config boolean value: " + value);
             return false;
         }
     }

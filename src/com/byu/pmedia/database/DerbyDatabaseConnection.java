@@ -11,11 +11,11 @@
  */
 package com.byu.pmedia.database;
 
-import com.byu.pmedia.log.PMLogger;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
+
 /**
  * DerbyDatabaseConnection
  * Secure wrapper for creating and maintaining a connection with an Apache Derby Database. Implements the
@@ -24,6 +24,9 @@ import java.sql.SQLException;
  * @author Braden Hitchcock
  */
 public class DerbyDatabaseConnection implements IDatabaseConnection {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The host IP address, or 'localhost' */
     private String host;
@@ -92,10 +95,10 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
         try{
             this.connection = DriverManager.getConnection(this.url);
 
-            PMLogger.getInstance().info("Database connection successful");
+            logger.info("Database connection successful");
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Failed to establish database connection, SQL error code: " + e.getErrorCode());
+            logger.severe("Failed to establish database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
             throw e;
         }
@@ -111,12 +114,12 @@ public class DerbyDatabaseConnection implements IDatabaseConnection {
      */
     @Override
     public boolean close() throws SQLException {
-        PMLogger.getInstance().info("Closing database connection");
+        logger.info("Closing database connection");
         try{
             this.connection.close();
         }
         catch(SQLException e){
-            PMLogger.getInstance().error("Failed to close database connection, SQL error code: " + e.getErrorCode());
+            logger.severe("Failed to close database connection, SQL error code: " + e.getErrorCode());
             e.printStackTrace();
             throw e;
         }

@@ -11,9 +11,10 @@
  */
 package com.byu.pmedia.tasks;
 
-import com.byu.pmedia.log.PMLogger;
 import com.byu.pmedia.model.StillFaceModel;
 import javafx.concurrent.Task;
+
+import java.util.logging.Logger;
 
 /**
  * StillFaceSyncTask
@@ -23,6 +24,9 @@ import javafx.concurrent.Task;
  * @author Braden Hitchcock
  */
 public class StillFaceSyncTask implements IStillFaceTask {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* Implementation of the callback provided by the developer */
     private StillFaceTaskCallback callback;
@@ -67,10 +71,10 @@ public class StillFaceSyncTask implements IStillFaceTask {
      *                   the onFail() method provided by the developer
      */
     private void synchronize() throws Exception{
-        PMLogger.getInstance().info("Synchronizing with database");
+        logger.info("Synchronizing with database");
         boolean success = StillFaceModel.getInstance().refresh();
         if(!success){
-            PMLogger.getInstance().error("Could not refresh the model");
+            logger.warning("Could not refresh the model");
             throw new Exception("Failed to refresh in memory data. See log for more details.");
         }
     }

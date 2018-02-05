@@ -14,10 +14,11 @@ package com.byu.pmedia.view;
 import com.byu.pmedia.config.StillFaceConfig;
 import com.byu.pmedia.database.DatabaseMode;
 import com.byu.pmedia.database.StillFaceDatabaseInitializer;
-import com.byu.pmedia.log.PMLogger;
+import com.byu.pmedia.log.PMLoggerInitializer;
 import com.byu.pmedia.model.StillFaceModel;
 
 import java.awt.*;
+import java.util.logging.Logger;
 
 /**
  * DataCenterSplashScreen
@@ -28,6 +29,9 @@ import java.awt.*;
  * @author Braden Hitchcock
  */
 public class DataCenterSplashScreen {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /**
      * Updates the visible splash screen frame with the latest progress bar length and text
@@ -53,7 +57,7 @@ public class DataCenterSplashScreen {
     public DataCenterSplashScreen(){
         final SplashScreen splash = SplashScreen.getSplashScreen();
         if (splash == null) {
-            PMLogger.getInstance().warn("SplashScreen.getSplashScreen() returned null");
+            logger.warning("SplashScreen.getSplashScreen() returned null");
             return;
         }
         Graphics2D g = splash.createGraphics();
@@ -61,9 +65,11 @@ public class DataCenterSplashScreen {
             System.out.println("g is null");
             return;
         }
+        logger.info("Beginning initialization");
         renderSplashFrame(g, 1, "Getting ready...");
         splash.update();
         fakeWait(1500);
+        logger.fine("Loading application configuration");
         renderSplashFrame(g, 100, "Loading configuration...");
         splash.update();
         boolean success = StillFaceConfig.getInstance().initialize("projectmedia.datacenter.config");
@@ -72,6 +78,7 @@ public class DataCenterSplashScreen {
                     "Please check your connection and database settings and try again.";
             exitOnError(message);
         }
+        logger.fine("Establishing database connection...");
         renderSplashFrame(g, 300, "Establishing database connection...");
         splash.update();
         DatabaseMode mode = DatabaseMode.valueOf(StillFaceConfig.getInstance().getAsString("database.mode"));
@@ -82,6 +89,7 @@ public class DataCenterSplashScreen {
                     "Please check your connection and database settings and try again.";
             exitOnError(message);
         }
+        logger.fine("Loading data and initializing model");
         renderSplashFrame(g, 440, "Loading data and initializing model...");
         splash.update();
         success = StillFaceModel.getInstance().initialize(initializer.getDAO());
@@ -94,6 +102,7 @@ public class DataCenterSplashScreen {
         splash.update();
         fakeWait(600);
         splash.close();
+        logger.info("Initialization completed successfully");
     }
 
     /**
@@ -117,6 +126,7 @@ public class DataCenterSplashScreen {
      */
     private void exitOnError(String message){
         new StillFaceErrorNotification(message).show();
+        logger.severe("Failed to initialize the application");
         System.exit(1);
     }
 

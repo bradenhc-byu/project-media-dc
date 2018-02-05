@@ -16,6 +16,7 @@ import com.byu.pmedia.parser.StillFaceCSVParser;
 import javafx.concurrent.Task;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * StillFaceExportTask
@@ -25,6 +26,9 @@ import java.util.*;
  * @author Braden Hitchcock
  */
 public class StillFaceExportTask implements IStillFaceTask {
+
+    /* Grab an instance of the logger */
+    private final static Logger logger =Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* The full path (filename included) to write the file to */
     private String filepath;
@@ -74,6 +78,7 @@ public class StillFaceExportTask implements IStillFaceTask {
      *                   provided by the developer
      */
     private void exportData() throws Exception{
+        logger.info("Beginning export task...");
         // Set up some maps to hold summary data
         Map<String, Integer> mostCommonCodeFirst = new HashMap<>();
         Map<String, Integer> mostCommonCodeSecond= new HashMap<>();
@@ -163,6 +168,7 @@ public class StillFaceExportTask implements IStillFaceTask {
                 new StillFaceVideoData(StillFaceModel.getInstance().getVisibleDataList()), this.filepath)
                 && parser.serializeSummaryToCSVFromLists(delim1, delim2, summaryList, this.summaryFilepath);
         if(!success){
+            logger.warning("Export failed");
             throw new Exception("Failed to export data. See log for more information.");
         }
     }
