@@ -60,7 +60,7 @@ public class DataCenterClientFX extends Application {
         DataCenterSplashScreen splashScreen = new DataCenterSplashScreen();
 
         // Display the main gui
-        Parent root = FXMLLoader.load(getClass().getResource("/com/byu/pmedia/view/stillfacefxgui.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/stillfacefxgui.fxml"));
         Scene scene = new Scene(root);
         stage.setTitle("ProjectMEDIA Data Center");
         stage.setScene(scene);

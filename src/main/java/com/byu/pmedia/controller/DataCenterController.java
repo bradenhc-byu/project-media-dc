@@ -348,7 +348,7 @@ public class DataCenterController implements Initializable, Observer {
     private void onImportCSVData(ActionEvent actionEvent) {
         try {
             Stage stage = new Stage();
-            Parent root = FXMLLoader.load(getClass().getResource("/com/byu/pmedia/view/stillfaceimportgui.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/stillfaceimportgui.fxml"));
             Scene scene = new Scene(root);
             stage.setTitle("Import CSV");
             stage.setScene(scene);
@@ -369,7 +369,7 @@ public class DataCenterController implements Initializable, Observer {
     private void onSettings(ActionEvent actionEvent) {
         try {
             Stage stage = new Stage();
-            Parent root = FXMLLoader.load(getClass().getResource("/com/byu/pmedia/view/stillfacesettings.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/stillfacesettings.fxml"));
             Scene scene = new Scene(root);
             stage.setTitle("Data Center Settings");
             stage.setScene(scene);
