@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Class-Path: groovy-all-2.4.12.jar cqengine-2.12.4-all.jar derbyclient.
+ jar mssql-jdbc-6.2.2.jre8.jar packager.jar javafx-mx.jar ant-javafx.j
+ ar
+Main-Class: com.byu.pmedia.client.DataCenterClientFX
+
