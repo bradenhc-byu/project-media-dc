@@ -21,6 +21,7 @@ import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.index.radix.RadixTreeIndex;
 import com.googlecode.cqengine.query.Query;
 
+import java.io.*;
 import java.sql.*;
 import java.util.logging.Logger;
 
@@ -663,10 +664,16 @@ public class StillFaceDAO {
             statement.executeUpdate(createCodeTableQuery);
             statement.executeUpdate(createTagTableQuery);
             this.closeConnection();
+            // Now we need to pre-populate the table with codes and tags
+            populateCodesAndTags();
             return true;
         }
         catch(SQLException e){
             logger.severe("Unable to create database table: " + e.getMessage());
+            return false;
+        }
+        catch(IOException e){
+            logger.severe("Failed to populate codes and tags");
             return false;
         }
     }
@@ -768,5 +775,59 @@ public class StillFaceDAO {
         }
     }
 
+    private void populateCodesAndTags() throws SQLException, IOException {
 
+        // Open the file
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader("./etc/initialize.config"));
+            int state = 0;
+            String line;
+            while((line = br.readLine()) != null){
+                if(line.startsWith("#")) continue;
+                if(line.isEmpty()){
+                    state++;
+                    continue;
+                }
+                if(state == 0){
+                    int key;
+                    if(line.startsWith("**")){
+                        key = this.insertNewCode(new StillFaceCode(line.replace("**","")));
+                        if(key > 0){
+                            this.updateExistingCode(new StillFaceCode(key, line.replace("**",
+                                    ""), 2));
+                        }
+                    }
+                    else if(line.startsWith("*")){
+                        key = this.insertNewCode(new StillFaceCode(line.replace("*","")));
+                        if(key > 0){
+                            this.updateExistingCode(new StillFaceCode(key, line.replace("*",
+                                    ""), 1));
+                        }
+                    }
+                    else{
+                        key = this.insertNewCode(new StillFaceCode(line));
+                    }
+
+                    if(key < 0) throw new SQLException("Failed to insert new code");
+                }
+                else{
+                    int key = this.insertNewTag(new StillFaceTag(line));
+                    if(key < 0) throw new SQLException("Failed to insert new tag");
+                }
+            }
+
+        } catch (IOException e) {
+            logger.severe("Failed to populate codes and tags: " + e.getMessage());
+            throw e;
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    logger.severe("Failed to close buffered reader: " + e.getMessage());
+                }
+            }
+        }
+    }
 }

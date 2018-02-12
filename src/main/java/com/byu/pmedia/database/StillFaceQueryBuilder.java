@@ -360,7 +360,7 @@ public class StillFaceQueryBuilder {
         return "CREATE TABLE " + CODES_TABLE_NAME + "\n" +
                 "(\n" +
                 "    cid INT PRIMARY KEY NOT NULL " + autoIncrement + ",\n" +
-                "    name VARCHAR(200) NOT NULL\n" +
+                "    name VARCHAR(200) NOT NULL,\n" +
                 "    delimiter INT NOT NULL\n" +
                 ")";
     }

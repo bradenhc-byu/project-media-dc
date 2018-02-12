@@ -1,0 +1,42 @@
+#!/bin/bash
+
+usage() {
+	echo "USAGE: $1 to_dir_name" 
+}
+
+
+if [ $# != 1 ]; then
+	usage $0
+	exit 0
+fi
+
+publish_base="$HOME/Code/published"
+publish_dir="$1"
+publish_location="$publish_base/$publish_dir"
+project_home="$MY_GIT_HOME/projectMEDIA-dc"
+resources="$project_home/src/main/resources"
+executable_start="start"
+executable_stop="stop"
+
+if [ ! -f "$publish_base" ]; then
+	mkdir "$publish_base"
+fi
+
+if [ ! -f "$publish_location" ]; then
+	mkdir "$publish_location"
+fi
+
+cd "$project_home"
+
+cp "etc/pmedia.server.config" "$publish_location"
+cp "$resources/lib/derbyrun.jar" "$publish_location"
+cp "$resources/lib/derbynet.jar" "$publish_location"
+cp "$resources/lib/derbytools.jar" "$publish_location"
+cp "$resources/lib/derby.jar" "$publish_location"
+
+printf "#!/bin/bash\njava -cp derbynet.jar:derbytools.jar:derby.jar -jar derbyrun.jar server start" > "$publish_location/$executable_start"
+printf "#!/bin/bash\njava -cp derbynet.jar:derbytool.jar:derby.jar -jar derbyrun.jar server shutdown" > "$publish_location/$executable_stop"
+chmod +x "$publish_location/$executable_start"
+chmod +x "$publish_location/$executable_stop"
+cd "$publish_location"
+zip -r "$publish_dir.zip" *
